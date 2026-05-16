@@ -1,0 +1,43 @@
+/* Added Noto Sans to supply the ₹ rupee glyph (U+20B9) missing from DM Sans */
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&family=Noto+Sans:wght@400;500&display=swap');
+
+:root {
+  --bg:        #0F1117;
+  --bg2:       #161B27;
+  --bg3:       #1E2535;
+  --border:    #252D42;
+  --border2:   #2E3A55;
+  --text:      #E8EDF7;
+  --text2:     #8A96B0;
+  --text3:     #4A566A;
+  --blue:      #3B82F6;
+  --blue2:     #1D4ED8;
+  --blue-dim:  rgba(59,130,246,0.15);
+  --blue-bg:   rgba(59,130,246,0.1);
+  --green:     #10B981;
+  --green-bg:  rgba(16,185,129,0.1);
+  --orange:    #F59E0B;
+  --orange-bg: rgba(245,158,11,0.1);
+  --red:       #EF4444;
+  --red-bg:    rgba(239,68,68,0.1);
+  --sidebar-w: 220px;
+  --radius:    10px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+
+body {
+  /* Noto Sans sits after DM Sans — browser uses it only for glyphs DM Sans lacks (e.g. ₹) */
+  font-family: 'DM Sans', 'Noto Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }

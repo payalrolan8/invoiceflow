@@ -1,0 +1,88 @@
+/* src/components/Topbar.module.css */
+
+.topbar {
+  height: 60px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+/* Mobile menu button */
+.menuBtn {
+  display: none;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  width: 36px; height: 36px;
+  align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--text2);
+  flex-shrink: 0;
+}
+@media (max-width: 640px) {
+  .menuBtn { display: flex; }
+}
+
+/* Right group */
+.right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* Theme toggle button */
+.themeBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.themePill {
+  display: flex;
+  align-items: center;
+  width: 52px;
+  height: 28px;
+  border-radius: 20px;
+  padding: 3px;
+  position: relative;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+  background: #1e293b;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+}
+
+.themePill[data-theme='light'] {
+  background: #e2e8f0;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08);
+}
+
+.themeKnob {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s, box-shadow 0.3s;
+  left: 27px;
+  background: #f59e0b;
+  color: #fff;
+  box-shadow: 0 1px 4px rgba(245,158,11,0.5);
+}
+
+.themePill[data-theme='light'] .themeKnob {
+  left: 3px;
+  background: #6366f1;
+  color: #fff;
+  box-shadow: 0 1px 4px rgba(99,102,241,0.45);
+}

@@ -1,0 +1,95 @@
+/* src/components/Sidebar.module.css */
+
+.sidebar {
+  width: var(--sidebar-w);
+  min-height: 100vh;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  position: fixed;
+  left: 0; top: 0; bottom: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+  z-index: 100;
+  transition: transform 0.3s;
+}
+
+/* Logo */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 18px 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.logoIcon {
+  width: 32px; height: 32px;
+  border-radius: 7px;
+  background: var(--blue);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Space Mono', monospace;
+  font-weight: 700; font-size: 14px; color: #fff;
+  flex-shrink: 0;
+}
+.logoName { font-size: 17px; font-weight: 700; }
+
+/* Nav section */
+.navSection { flex: 1; padding: 0 8px; }
+
+.navLabel {
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+  padding: 8px 10px 4px;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  margin-bottom: 2px;
+  color: var(--text2);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+  user-select: none;
+}
+.navItem svg { flex-shrink: 0; opacity: 0.7; }
+.navItem:hover { background: var(--bg3); color: var(--text); }
+.navItem:hover svg { opacity: 1; }
+.navItem.active {
+  background: var(--blue-dim);
+  color: var(--blue);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+.navItem.active svg { opacity: 1; }
+
+/* Badge */
+.badge {
+  margin-left: auto;
+  background: var(--red);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+/* Footer */
+.footer {
+  padding: 12px 8px 0;
+  border-top: 1px solid var(--border);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .sidebar { transform: translateX(-220px); }
+  .sidebar.open { transform: translateX(0); }
+}

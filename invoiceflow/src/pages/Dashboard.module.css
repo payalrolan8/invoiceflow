@@ -1,0 +1,373 @@
+/* src/pages/Dashboard.module.css */
+
+.page { animation: fadeIn 0.3s ease; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+.pageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.pageTitle   { font-size: 20px; font-weight: 700; }
+.pageSubtitle { color: var(--text2); font-size: 13px; margin-top: 2px; }
+
+/* ── Stat cards ─────────────────────────────────────────────────────────── */
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 16px;
+}
+@media (max-width: 1000px) { .statGrid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px)  { .statGrid { grid-template-columns: 1fr; } }
+
+.statCard {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px 14px;
+  animation: fadeIn 0.4s ease both;
+  transition: border-color 0.2s, transform 0.15s;
+}
+.statCard:hover {
+  border-color: var(--border2);
+  transform: translateY(-2px);
+}
+
+.statTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.statLabel {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+.statDot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.statValue {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  font-family: 'Space Mono', monospace;
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.statSub {
+  font-size: 12px;
+  color: var(--text2);
+}
+
+/* ── Chart grid ─────────────────────────────────────────────────────────── */
+.chartGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-bottom: 16px;
+}
+@media (max-width: 820px) { .chartGrid { grid-template-columns: 1fr; } }
+
+.chartCard {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 20px 16px;
+  animation: fadeIn 0.4s ease both;
+  transition: border-color 0.2s;
+}
+.chartCard:hover { border-color: var(--border2); }
+
+.chartHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.chartTitle {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+.chartSub {
+  font-size: 11px;
+  color: var(--text2);
+}
+.chartBig {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: 'Space Mono', monospace;
+  white-space: nowrap;
+}
+
+/* ── Bar chart ──────────────────────────────────────────────────────────── */
+.barChart {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  width: 100%;
+}
+.barCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  height: 100%;
+}
+.barTrack {
+  flex: 1;
+  width: 100%;
+  background: var(--bg3);
+  border-radius: 5px 5px 0 0;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+.barFill {
+  width: 100%;
+  border-radius: 5px 5px 0 0;
+  animation: barGrow 0.6s ease both;
+  transform-origin: bottom;
+}
+@keyframes barGrow {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+.barLabel {
+  font-size: 10px;
+  color: var(--text3);
+  font-weight: 500;
+}
+
+/* ── Donut chart ────────────────────────────────────────────────────────── */
+.donutWrap {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.donutCenter {
+  position: relative;
+  flex-shrink: 0;
+}
+.donutInner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.donutNum {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: 'Space Mono', monospace;
+}
+.donutLabel {
+  font-size: 10px;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.donutLegend { flex: 1; display: flex; flex-direction: column; gap: 9px; }
+.legendRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.legendDot {
+  width: 8px; height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.legendLabel { flex: 1; color: var(--text2); }
+.legendCount { font-weight: 700; font-family: 'Space Mono', monospace; font-size: 13px; }
+
+/* ── Overdue aging ──────────────────────────────────────────────────────── */
+.agingList { display: flex; flex-direction: column; gap: 10px; }
+.agingRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.agingLabel {
+  font-size: 11px;
+  color: var(--text2);
+  width: 54px;
+  flex-shrink: 0;
+}
+.agingBar {
+  flex: 1;
+  height: 6px;
+  background: var(--bg3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.agingFill {
+  height: 100%;
+  background: var(--red);
+  border-radius: 3px;
+  opacity: 0.75;
+  transition: width 0.6s ease;
+}
+.agingCount {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--red);
+  width: 20px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ── Top customers ──────────────────────────────────────────────────────── */
+.topList { display: flex; flex-direction: column; gap: 12px; }
+.topRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.topRank {
+  width: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text3);
+  flex-shrink: 0;
+  text-align: center;
+}
+.topInfo { flex: 1; min-width: 0; }
+.topName {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+.topBar {
+  height: 4px;
+  background: var(--bg3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.topBarFill {
+  height: 100%;
+  background: var(--orange);
+  border-radius: 2px;
+  opacity: 0.8;
+  transition: width 0.6s ease;
+}
+.topAmount {
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Space Mono', monospace;
+  color: var(--orange);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.emptyState {
+  text-align: center;
+  color: var(--text2);
+  font-size: 13px;
+  padding: 20px 0;
+}
+
+/* ── Table card ─────────────────────────────────────────────────────────── */
+.tableCard {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  animation: fadeIn 0.4s ease both;
+}
+.tableCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.tableWrap { overflow-x: auto; }
+
+.table { width: 100%; border-collapse: collapse; }
+.table thead th {
+  text-align: left;
+  padding: 10px 16px;
+  font-size: 11px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 600;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
+.table tbody tr:last-child { border-bottom: none; }
+.table tbody tr:hover { background: var(--bg3); }
+.table td { padding: 12px 16px; font-size: 13px; color: var(--text); }
+
+.idCell { font-family: 'Space Mono', monospace; font-size: 12px; color: var(--text2); }
+.muted  { color: var(--text2); font-size: 12px; }
+.amount { font-family: 'Space Mono', monospace; font-weight: 700; }
+
+/* ── Skeleton / Error ───────────────────────────────────────────────────── */
+.skeletonCard {
+  height: 100px;
+  background: linear-gradient(90deg, var(--bg2) 25%, var(--bg3) 50%, var(--bg2) 75%);
+  background-size: 200% 100%;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.errorBanner {
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.25);
+  color: var(--red);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+/* ── Button ─────────────────────────────────────────────────────────────── */
+.btnBlue {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 16px;
+  background: var(--blue); color: #fff;
+  border: none; border-radius: 8px;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  transition: background 0.15s;
+}
+.btnBlue:hover { background: var(--blue2); }
+
+/* ── Chart row (when only 2 charts needed) ──────────────────────────────── */
+.chartRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+@media (max-width: 820px) { .chartRow { grid-template-columns: 1fr; } }
