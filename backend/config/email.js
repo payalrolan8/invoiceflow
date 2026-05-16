@@ -10,6 +10,7 @@ const getTransporter = () => {
   if (!transporter) {
     transporter = nodemailer.createTransport({
       service: 'gmail',
+       family: 4,
       auth: {
         user: process.env.GMAIL_USER,
         pass: process.env.GMAIL_APP_PASS,
