@@ -63,7 +63,6 @@ const FILTER_COLORS = {
   Cancelled: { bg: '#4a566a',        text: '#fff' },
 };
 
-// ── Sort options (mirrors Customers page) ──────────────────────────────────
 const SORT_OPTIONS = [
   { value: 'newest',     label: 'Newest first'    },
   { value: 'oldest',     label: 'Oldest first'    },
@@ -488,7 +487,7 @@ export default function Invoices() {
   const [allInvoices, setAllInvoices] = useState([]);
   const [filter,      setFilter]      = useState('All');
   const [search,      setSearch]      = useState('');
-  const [sort,        setSort]        = useState('newest');   // ← NEW
+  const [sort,        setSort]        = useState('newest');
   const [loading,     setLoading]     = useState(true);
   const [error,       setError]       = useState(null);
   const [modalInvoice, setModal]      = useState(undefined);
@@ -512,7 +511,6 @@ export default function Invoices() {
   useEffect(() => { loadAll(); }, [loadAll]);
   useEffect(() => { load(filter); }, [filter, load]);
 
-  // Search filter + sort applied client-side on top of status filter
   const displayed = sortInvoices(
     invoices.filter((inv) => {
       if (!search.trim()) return true;
@@ -572,9 +570,7 @@ export default function Invoices() {
       {error && <div className={styles.errorBanner}>⚠ {error}</div>}
 
       <Card>
-        {/* ── Toolbar ── */}
         <div className={styles.toolbar}>
-          {/* Search */}
           <div className={styles.searchWrap}>
             <span className={styles.searchIcon}><SearchIcon /></span>
             <input
@@ -589,7 +585,6 @@ export default function Invoices() {
             )}
           </div>
 
-          {/* Filter pills + sort — right side */}
           <div className={styles.toolbarRight}>
             <div className={styles.filters}>
               {FILTERS.map((f) => {
@@ -617,7 +612,6 @@ export default function Invoices() {
               })}
             </div>
 
-            {/* Sort dropdown — matches Customers page */}
             <select
               className={styles.sortSelect}
               value={sort}
@@ -644,7 +638,7 @@ export default function Invoices() {
                   <tr><td colSpan={7} className={styles.empty}>Loading…</td></tr>
                 ) : displayed.length > 0 ? (
                   displayed.map((inv) => (
-                    <tr key={inv._id} className={styles.row} onClick={() => setModal(inv)} title="Click to edit">
+                    <tr key={inv._id} className={styles.row}>
                       <td className={styles.idCell}>
                         <Highlight text={`#${inv.invoiceNumber}`} query={search} />
                       </td>
