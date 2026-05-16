@@ -7,7 +7,7 @@ import Topbar         from './components/Topbar';
 import Dashboard      from './pages/Dashboard';
 import Customers      from './pages/Customers';
 import Invoices       from './pages/Invoices';
-import CustomerDetail from './pages/CustomerDetail';
+import CustomerDetail from './pages/Customerdetail';
 import Reminders      from './pages/Reminders';   // ← NEW
 
 export default function App() {
