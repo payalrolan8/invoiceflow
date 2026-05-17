@@ -39,30 +39,16 @@ export default function App() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
 
-      {/* ── Overlay (mobile only) ── */}
       {sidebarOpen && (
         <div
-          onClick={() => setSidebarOpen(false)}
-          style={{
-            position: 'fixed', inset: 0,
-            background: 'rgba(0,0,0,0.5)',
-            zIndex: 150,
-            display: 'none',        // hidden on desktop via CSS
-          }}
           className="sidebar-overlay"
+          onClick={() => setSidebarOpen(false)}
         />
       )}
 
       <Sidebar activePage={page} onNav={handleNav} open={sidebarOpen} />
 
-      {/* ── Main content ── */}
-      <div className="main-content" style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100vh',
-        minWidth: 0,
-      }}>
+      <div className="main-content">
         <Topbar onMenuClick={() => setSidebarOpen((v) => !v)} />
         <main style={{ padding: 24, flex: 1 }}>{renderPage()}</main>
       </div>

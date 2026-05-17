@@ -22,7 +22,6 @@
   --radius:    10px;
 }
 
-/* ── Light theme ─────────────────────────────────────────────────────────── */
 [data-theme='light'] {
   --bg:        #F4F6FB;
   --bg2:       #FFFFFF;
@@ -60,3 +59,43 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ── Layout ── */
+.main-content {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-width: 0;
+  transition: margin-left 0.25s ease;
+}
+
+.sidebar-overlay {
+  display: none;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+  }
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 150;
+  }
+
+  main {
+    padding: 16px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  main {
+    padding: 12px !important;
+  }
+}

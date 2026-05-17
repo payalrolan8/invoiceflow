@@ -9,12 +9,18 @@ const getTransporter = () => {
 
   if (!transporter) {
     transporter = nodemailer.createTransport({
-      service: 'gmail',
-       family: 4,
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
       auth: {
         user: process.env.GMAIL_USER,
         pass: process.env.GMAIL_APP_PASS,
       },
+      pool: true,
+      maxConnections: 5,
+      connectionTimeout: 5000,
+      greetingTimeout: 5000,
+      socketTimeout: 10000,
     });
   }
   return transporter;
