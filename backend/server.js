@@ -1,4 +1,7 @@
 // invoiceflow-backend/server.js
+import dns from 'dns';
+dns.setDefaultResultOrder('ipv4first');
+
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
@@ -21,7 +24,6 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
     callback(new Error(`CORS: origin ${origin} not allowed`));
