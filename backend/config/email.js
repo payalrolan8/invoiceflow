@@ -58,7 +58,7 @@ export const sendInvoiceReminder = async (invoice, customSubject, customBody) =>
 
   const info = await resend.emails.send({
     from:    `InvoiceFlow <${process.env.FROM_EMAIL}>`,
-    to:      customer.email,
+    to:      process.env.TEST_EMAIL || customer.email,
     subject,
     html,
   });
