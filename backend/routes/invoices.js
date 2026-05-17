@@ -117,12 +117,21 @@ router.put('/:id', async (req, res, next) => {
     const invoice = await Invoice.findById(req.params.id);
     if (!invoice) return res.status(404).json({ success: false, error: 'Invoice not found' });
 
+    // ── FIX: capture old status BEFORE Object.assign overwrites it ────────────
+    const wasPaid = invoice.status === 'paid';
+
     Object.assign(invoice, update);
     await invoice.save();
 
-    if (rest.status === 'paid' && invoice.status !== 'paid') {
+    // Sync customer totalPaid when status transitions to/from paid
+    const nowPaid = invoice.status === 'paid';
+    if (!wasPaid && nowPaid) {
       await Customer.findByIdAndUpdate(invoice.customer, {
         $inc: { totalPaid: invoice.total },
+      });
+    } else if (wasPaid && !nowPaid) {
+      await Customer.findByIdAndUpdate(invoice.customer, {
+        $inc: { totalPaid: -invoice.total },
       });
     }
 
@@ -178,8 +187,10 @@ router.post('/:id/remind', async (req, res, next) => {
       return res.status(400).json({ success: false, error: 'Invoice is already paid — no reminder needed' });
     }
 
-    await sendInvoiceReminder(invoice);
+    // ── FIX: store resendEmailId so the webhook can match open events ─────────
+    const resendEmailId = await sendInvoiceReminder(invoice);
     invoice.reminderSentAt = new Date();
+    invoice.resendEmailId  = resendEmailId;
     await invoice.save();
 
     res.json({ success: true, message: `Reminder sent to ${invoice.customer.email}` });

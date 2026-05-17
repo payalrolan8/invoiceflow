@@ -56,12 +56,14 @@ export const sendInvoiceReminder = async (invoice, customSubject, customBody) =>
       </div>`;
   }
 
-  const info = await resend.emails.send({
-    from:    `InvoiceFlow <${process.env.FROM_EMAIL}>`,
-    to:      process.env.TEST_EMAIL || customer.email,
+  const result = await resend.emails.send({
+    from:           `InvoiceFlow <${process.env.FROM_EMAIL}>`,
+    to:             process.env.TEST_EMAIL || customer.email,
     subject,
     html,
+    open_tracking:  true,   // ← enables Resend's built-in open tracking
   });
 
-  return info;
+  // Return the Resend email ID so callers can store it on the invoice
+  return result.data?.id ?? result.id;
 };
