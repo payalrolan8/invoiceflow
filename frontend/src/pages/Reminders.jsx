@@ -320,10 +320,11 @@ export default function Reminders() {
   const totalAmount   = queue.reduce((sum, inv) => sum + (inv.total ?? 0), 0);
   const filteredQueue = queue.filter((inv) => applyFilter(inv, filter));
 
+  // pill counts match what the table actually shows per filter
   const counts = {
     all:     queue.length,
-    overdue: totalOverdue,
-    pending: totalPending,
+    overdue: queue.filter((inv) => inv.status === 'overdue' && !inv.reminderSentAt).length,
+    pending: queue.filter((inv) => inv.status === 'pending' && !inv.reminderSentAt).length,
     sent:    remindersSent,
   };
 
@@ -354,8 +355,6 @@ export default function Reminders() {
       </div>
 
       <div className={styles.section}>
-
-        {/* ── Single header row: title LEFT · pills CENTER/RIGHT · count FAR RIGHT ── */}
         <div className={styles.sectionHeader}>
           <span className={styles.sectionTitle}>📋 Reminder Queue</span>
 
