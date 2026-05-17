@@ -20,6 +20,7 @@
   --red-bg:    rgba(239,68,68,0.1);
   --sidebar-w: 220px;
   --radius:    10px;
+  color-scheme: dark;
 }
 
 [data-theme='light'] {
@@ -40,6 +41,7 @@
   --orange-bg: rgba(245,158,11,0.08);
   --red:       #EF4444;
   --red-bg:    rgba(239,68,68,0.08);
+  color-scheme: light;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
