@@ -1,34 +1,14 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
-let transporter = null;
-
-const getTransporter = () => {
-  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASS) {
-    throw new Error('Email credentials not configured. Set GMAIL_USER and GMAIL_APP_PASS in your .env');
+const getResend = () => {
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error('Email credentials not configured. Set RESEND_API_KEY in your .env');
   }
-
-  if (!transporter) {
-    transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      family: 4,
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASS,
-      },
-      pool: true,
-      maxConnections: 5,
-      connectionTimeout: 5000,
-      greetingTimeout: 5000,
-      socketTimeout: 10000,
-    });
-  }
-  return transporter;
+  return new Resend(process.env.RESEND_API_KEY);
 };
 
 export const sendInvoiceReminder = async (invoice, customSubject, customBody) => {
-  const mailer   = getTransporter();
+  const resend   = getResend();
   const customer = invoice.customer;
   const due = new Date(invoice.dueDate).toLocaleDateString('en-IN', {
     day: 'numeric', month: 'long', year: 'numeric',
@@ -76,9 +56,9 @@ export const sendInvoiceReminder = async (invoice, customSubject, customBody) =>
       </div>`;
   }
 
-  const info = await mailer.sendMail({
-    from: `"InvoiceFlow" <${process.env.GMAIL_USER}>`,
-    to:   customer.email,
+  const info = await resend.emails.send({
+    from:    `InvoiceFlow <${process.env.FROM_EMAIL}>`,
+    to:      customer.email,
     subject,
     html,
   });
