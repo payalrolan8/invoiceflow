@@ -44,3 +44,9 @@
   align-items: center;
   gap: 4px;
 }
+
+@media (max-width: 768px) {
+  .card {
+    padding: 0.875rem;
+  }
+}

@@ -702,4 +702,4 @@ export default function Invoices() {
       {toast && <Toast message={`✓ ${toast}`} onDone={() => setToast(null)} />}
     </div>
   );
-}
+} 

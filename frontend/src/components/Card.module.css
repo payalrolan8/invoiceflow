@@ -23,3 +23,9 @@
 .body {
   padding: 16px 20px;
 }
+
+@media (max-width: 768px) {
+  .body {
+    padding: 12px 14px;
+  }
+}

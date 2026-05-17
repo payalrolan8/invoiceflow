@@ -13,7 +13,6 @@
   z-index: 50;
 }
 
-/* Mobile menu button */
 .menuBtn {
   display: none;
   background: var(--bg3);
@@ -25,11 +24,11 @@
   color: var(--text2);
   flex-shrink: 0;
 }
-@media (max-width: 640px) {
+
+@media (max-width: 768px) {
   .menuBtn { display: flex; }
 }
 
-/* Right group */
 .right {
   display: flex;
   align-items: center;
@@ -37,7 +36,6 @@
   margin-left: auto;
 }
 
-/* Theme toggle button */
 .themeBtn {
   background: none;
   border: none;
