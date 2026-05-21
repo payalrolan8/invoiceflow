@@ -28,7 +28,18 @@ function MoonIcon() {
   );
 }
 
-export default function Topbar({ onMenuClick }) {
+function LogoutIcon() {
+  return (
+    <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2"
+      strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  );
+}
+
+export default function Topbar({ onMenuClick, onLogout }) {
   const [theme, setTheme] = useState(
     () => localStorage.getItem('theme') || 'dark'
   );
@@ -52,8 +63,10 @@ export default function Topbar({ onMenuClick }) {
         </svg>
       </button>
 
-      {/* Theme toggle */}
+      {/* Right controls */}
       <div className={styles.right}>
+
+        {/* Theme toggle */}
         <button className={styles.themeBtn} onClick={toggle} aria-label="Toggle theme">
           <span className={styles.themePill} data-theme={theme}>
             <span className={styles.themeKnob}>
@@ -61,6 +74,13 @@ export default function Topbar({ onMenuClick }) {
             </span>
           </span>
         </button>
+
+        {/* Logout button */}
+        <button className={styles.logoutBtn} onClick={onLogout} title="Sign out">
+          <LogoutIcon />
+          <span>Sign out</span>
+        </button>
+
       </div>
 
     </header>

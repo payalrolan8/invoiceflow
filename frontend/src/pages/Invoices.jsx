@@ -10,8 +10,9 @@ import {
   createInvoice,
   updateInvoice,
   updateInvoiceStatus,
+  deleteInvoice,
 } from '../api/invoices';
-import { getCustomers } from '../api/customers';
+import { getCustomers, createCustomer } from '../api/customers';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -50,44 +51,44 @@ function Highlight({ text = '', query = '' }) {
   );
 }
 
-const FILTERS  = ['All', 'Draft', 'Sent', 'Pending', 'Paid', 'Overdue', 'Cancelled'];
+const FILTERS = ['All', 'Draft', 'Sent', 'Pending', 'Paid', 'Overdue', 'Cancelled'];
 const STATUSES = ['draft', 'sent', 'pending', 'paid', 'overdue', 'cancelled'];
 
 const FILTER_COLORS = {
-  All:       { bg: 'var(--blue)',    text: '#fff' },
-  Draft:     { bg: '#6b7280',        text: '#fff' },
-  Sent:      { bg: '#60a5fa',        text: '#fff' },
-  Pending:   { bg: '#f97316',        text: '#fff' },
-  Paid:      { bg: '#22c55e',        text: '#fff' },
-  Overdue:   { bg: '#ef4444',        text: '#fff' },
-  Cancelled: { bg: '#4a566a',        text: '#fff' },
+  All: { bg: 'var(--blue)', text: '#fff' },
+  Draft: { bg: '#6b7280', text: '#fff' },
+  Sent: { bg: '#60a5fa', text: '#fff' },
+  Pending: { bg: '#f97316', text: '#fff' },
+  Paid: { bg: '#22c55e', text: '#fff' },
+  Overdue: { bg: '#ef4444', text: '#fff' },
+  Cancelled: { bg: '#4a566a', text: '#fff' },
 };
 
 const SORT_OPTIONS = [
-  { value: 'newest',     label: 'Newest first'    },
-  { value: 'oldest',     label: 'Oldest first'    },
-  { value: 'due_soon',   label: 'Due date (soon)' },
-  { value: 'due_late',   label: 'Due date (late)' },
-  { value: 'amount_hi',  label: 'Highest amount'  },
-  { value: 'amount_lo',  label: 'Lowest amount'   },
+  { value: 'newest', label: 'Newest first' },
+  { value: 'oldest', label: 'Oldest first' },
+  { value: 'due_soon', label: 'Due date (soon)' },
+  { value: 'due_late', label: 'Due date (late)' },
+  { value: 'amount_hi', label: 'Highest amount' },
+  { value: 'amount_lo', label: 'Lowest amount' },
 ];
 
 const EMPTY_LINE = () => ({ description: '', quantity: 1, unitPrice: '', total: 0 });
 
 const EMPTY_FORM = {
-  customer:  null,
-  status:    'draft',
+  customer: null,
+  status: 'draft',
   issueDate: toInputDate(new Date().toISOString()),
-  dueDate:   '',
-  tax:       0,
-  notes:     '',
+  dueDate: '',
+  tax: 0,
+  notes: '',
   lineItems: [EMPTY_LINE()],
 };
 
 // ── StatusDropdown ─────────────────────────────────────────────────────────
 
 function StatusDropdown({ invoice, onStatusChange }) {
-  const [open, setOpen]     = useState(false);
+  const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const ref = useRef(null);
 
@@ -140,20 +141,70 @@ function StatusDropdown({ invoice, onStatusChange }) {
   );
 }
 
+// ── DeleteConfirmModal ─────────────────────────────────────────────────────
+
+function DeleteConfirmModal({ invoice, onClose, onConfirm, deleting }) {
+  function handleBackdrop(e) {
+    if (e.target === e.currentTarget && !deleting) onClose();
+  }
+
+  useEffect(() => {
+    function onKey(e) { if (e.key === 'Escape' && !deleting) onClose(); }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose, deleting]);
+
+  return (
+    <div className={styles.modalBackdrop} onClick={handleBackdrop}>
+      <div className={styles.deleteModal}>
+        <div className={styles.deleteModalHeader}>
+          <div className={styles.deleteModalTitle}>Delete Invoice</div>
+          <button className={styles.deleteModalClose} onClick={onClose} disabled={deleting}>✕</button>
+        </div>
+        <div className={styles.deleteModalBody}>
+          <div className={styles.deleteIcon}>🗑</div>
+          <p className={styles.deleteHeading}>
+            Delete <strong>#{invoice.invoiceNumber}</strong>?
+          </p>
+          <p className={styles.deleteSubtext}>
+            This will permanently delete the invoice
+            {invoice.customer?.name ? <> for <strong>{invoice.customer.name}</strong></> : ''}.
+            {' '}This action <strong>cannot be undone</strong>.
+          </p>
+        </div>
+        <div className={styles.deleteModalActions}>
+          <button className={styles.cancelBtn} onClick={onClose} disabled={deleting}>
+            Cancel
+          </button>
+          <button className={styles.deleteBtnConfirm} onClick={onConfirm} disabled={deleting}>
+            {deleting
+              ? <><span className={styles.spinnerSm} /> Deleting…</>
+              : '🗑 Delete Invoice'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── CustomerPicker ─────────────────────────────────────────────────────────
 
 function CustomerPicker({ value, onChange }) {
   const [customers, setCustomers] = useState([]);
-  const [query, setQuery]         = useState('');
-  const [open, setOpen]           = useState(false);
-  const [loading, setLoading]     = useState(false);
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [newForm, setNewForm] = useState({ name: '', email: '', company: '', phone: '' });
+  const [creating, setCreating] = useState(false);
+  const [newError, setNewError] = useState(null);
   const ref = useRef(null);
 
   useEffect(() => {
     setLoading(true);
     getCustomers()
       .then(setCustomers)
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, []);
 
@@ -166,6 +217,8 @@ function CustomerPicker({ value, onChange }) {
     function handler(e) {
       if (ref.current && !ref.current.contains(e.target)) {
         setOpen(false);
+        setShowNew(false);
+        setNewError(null);
         setQuery(value?.name ?? '');
       }
     }
@@ -186,6 +239,7 @@ function CustomerPicker({ value, onChange }) {
     onChange(c);
     setQuery(c.name);
     setOpen(false);
+    setShowNew(false);
   }
 
   function clear(e) {
@@ -194,14 +248,56 @@ function CustomerPicker({ value, onChange }) {
     setQuery('');
   }
 
+  function openNew(e) {
+    e.preventDefault();
+    setNewForm({ name: query.trim(), email: '', company: '', phone: '' });
+    setShowNew(true);
+    setNewError(null);
+  }
+
+  async function submitNew(e) {
+    e.preventDefault();
+    setNewError(null);
+    if (!newForm.name.trim()) { setNewError('Name is required.'); return; }
+    if (!newForm.email.trim()) { setNewError('Email is required.'); return; }
+    if (!/^\S+@\S+\.\S+$/.test(newForm.email)) { setNewError('Enter a valid email.'); return; }
+    setCreating(true);
+    try {
+      const created = await createCustomer({
+        name: newForm.name.trim(),
+        email: newForm.email.trim(),
+        company: newForm.company.trim(),
+        phone: newForm.phone.trim(),
+      });
+      setCustomers((prev) => [created, ...prev]);
+      select(created);
+      setShowNew(false);
+      setNewForm({ name: '', email: '', company: '', phone: '' });
+    } catch (err) {
+      setNewError(err.message ?? 'Could not create customer.');
+    } finally {
+      setCreating(false);
+    }
+  }
+
   return (
     <div ref={ref} className={styles.pickerWrap}>
       <div className={styles.pickerInputRow}>
         <span className={styles.pickerSearchIcon}>⌕</span>
         <input
           value={query}
-          onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+          onChange={(e) => { setQuery(e.target.value); setOpen(true); setShowNew(false); }}
           onFocus={() => setOpen(true)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              if (filtered.length > 0) {
+                select(filtered[0]);
+              } else if (query.trim()) {
+                openNew(e);
+              }
+            }
+          }}
           placeholder={loading ? 'Loading customers…' : 'Search by name, email or company…'}
           className={styles.pickerText}
           autoComplete="off"
@@ -222,7 +318,7 @@ function CustomerPicker({ value, onChange }) {
         </div>
       )}
 
-      {open && filtered.length > 0 && (
+      {open && !showNew && (
         <div className={styles.pickerMenu}>
           {filtered.slice(0, 8).map((c) => (
             <button key={c._id} type="button" className={styles.pickerOption} onClick={() => select(c)}>
@@ -233,12 +329,42 @@ function CustomerPicker({ value, onChange }) {
               </div>
             </button>
           ))}
+          {filtered.length === 0 && query.length > 0 && (
+            <div className={styles.pickerEmpty}>No customers match "{query}"</div>
+          )}
+          <button type="button" className={styles.pickerNewBtn} onClick={openNew}>
+            <span className={styles.pickerNewIcon}>＋</span>
+            {query.trim() ? `Create "${query.trim()}"` : 'New customer'}
+          </button>
         </div>
       )}
 
-      {open && query.length > 0 && filtered.length === 0 && (
+      {open && showNew && (
         <div className={styles.pickerMenu}>
-          <div className={styles.pickerEmpty}>No customers match "{query}"</div>
+          <div className={styles.newCustHeader}>
+            <span>New Customer</span>
+            <button
+              type="button"
+              className={styles.newCustBack}
+              onClick={() => { setShowNew(false); setNewError(null); }}
+            >
+              ← Back
+            </button>
+          </div>
+          {newError && <div className={styles.newCustError}>⚠ {newError}</div>}
+          <div className={styles.newCustForm}>
+            <input className={styles.newCustInput} placeholder="Name *" value={newForm.name}
+              onChange={(e) => setNewForm((f) => ({ ...f, name: e.target.value }))} autoFocus />
+            <input className={styles.newCustInput} placeholder="Email *" type="email" value={newForm.email}
+              onChange={(e) => setNewForm((f) => ({ ...f, email: e.target.value }))} />
+            <input className={styles.newCustInput} placeholder="Company (optional)" value={newForm.company}
+              onChange={(e) => setNewForm((f) => ({ ...f, company: e.target.value }))} />
+            <input className={styles.newCustInput} placeholder="Phone (optional)" value={newForm.phone}
+              onChange={(e) => setNewForm((f) => ({ ...f, phone: e.target.value }))} />
+            <button type="button" className={styles.newCustSubmit} onClick={submitNew} disabled={creating}>
+              {creating ? <><span className={styles.newCustSpinner} /> Creating…</> : 'Create & Select'}
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -255,12 +381,12 @@ function InvoiceModal({ invoice, onClose, onSaved }) {
     const cust = invoice.customer && typeof invoice.customer === 'object'
       ? invoice.customer : null;
     return {
-      customer:  cust,
-      status:    invoice.status    ?? 'draft',
+      customer: cust,
+      status: invoice.status ?? 'draft',
       issueDate: toInputDate(invoice.issueDate),
-      dueDate:   toInputDate(invoice.dueDate),
-      tax:       invoice.tax       ?? 0,
-      notes:     invoice.notes     ?? '',
+      dueDate: toInputDate(invoice.dueDate),
+      tax: invoice.tax ?? 0,
+      notes: invoice.notes ?? '',
       lineItems: invoice.lineItems?.length
         ? invoice.lineItems.map((l) => ({ ...l }))
         : [EMPTY_LINE()],
@@ -268,19 +394,17 @@ function InvoiceModal({ invoice, onClose, onSaved }) {
   });
 
   const [saving, setSaving] = useState(false);
-  const [error, setError]   = useState(null);
+  const [error, setError] = useState(null);
   const [touchedPrices, setTouchedPrices] = useState({});
 
-  function set(field, val) {
-    setForm((f) => ({ ...f, [field]: val }));
-  }
+  function set(field, val) { setForm((f) => ({ ...f, [field]: val })); }
 
   function setLine(idx, field, raw) {
     setForm((f) => {
       const items = f.lineItems.map((l, i) => {
         if (i !== idx) return l;
         const updated = { ...l, [field]: raw };
-        const qty   = parseFloat(field === 'quantity'  ? raw : updated.quantity)  || 0;
+        const qty = parseFloat(field === 'quantity' ? raw : updated.quantity) || 0;
         const price = parseFloat(field === 'unitPrice' ? raw : updated.unitPrice) || 0;
         updated.total = parseFloat((qty * price).toFixed(2));
         return updated;
@@ -289,23 +413,18 @@ function InvoiceModal({ invoice, onClose, onSaved }) {
     });
   }
 
-  function addLine() {
-    setForm((f) => ({ ...f, lineItems: [...f.lineItems, EMPTY_LINE()] }));
-  }
+  function addLine() { setForm((f) => ({ ...f, lineItems: [...f.lineItems, EMPTY_LINE()] })); }
+  function removeLine(idx) { setForm((f) => ({ ...f, lineItems: f.lineItems.filter((_, i) => i !== idx) })); }
 
-  function removeLine(idx) {
-    setForm((f) => ({ ...f, lineItems: f.lineItems.filter((_, i) => i !== idx) }));
-  }
-
-  const subtotal  = form.lineItems.reduce((s, l) => s + (l.total || 0), 0);
+  const subtotal = form.lineItems.reduce((s, l) => s + (l.total || 0), 0);
   const taxAmount = parseFloat(((subtotal * (form.tax || 0)) / 100).toFixed(2));
-  const total     = parseFloat((subtotal + taxAmount).toFixed(2));
+  const total = parseFloat((subtotal + taxAmount).toFixed(2));
 
   async function submit(e) {
     e.preventDefault();
     setError(null);
     if (!form.customer?._id) { setError('Please select a customer.'); return; }
-    if (!form.dueDate)        { setError('Due date is required.');     return; }
+    if (!form.dueDate) { setError('Due date is required.'); return; }
     if (!form.lineItems.length) { setError('Add at least one line item.'); return; }
     const hasEmptyLine = form.lineItems.some((l) => !l.description.trim() || !(parseFloat(l.unitPrice) > 0));
     if (hasEmptyLine) { setError('Each line item needs a description and a price greater than ₹0.'); return; }
@@ -314,26 +433,23 @@ function InvoiceModal({ invoice, onClose, onSaved }) {
     setSaving(true);
     try {
       const payload = {
-        customer:  form.customer._id,
-        status:    form.status,
+        customer: form.customer._id,
+        status: form.status,
         issueDate: form.issueDate,
-        dueDate:   form.dueDate,
-        tax:       parseFloat(form.tax) || 0,
-        notes:     form.notes,
+        dueDate: form.dueDate,
+        tax: parseFloat(form.tax) || 0,
+        notes: form.notes,
         lineItems: form.lineItems.map((l) => ({
           description: l.description,
-          quantity:    parseFloat(l.quantity)  || 1,
-          unitPrice:   parseFloat(l.unitPrice) || 0,
-          total:       l.total,
+          quantity: parseFloat(l.quantity) || 1,
+          unitPrice: parseFloat(l.unitPrice) || 0,
+          total: l.total,
         })),
       };
       const saved = isEdit
         ? await updateInvoice(invoice._id, payload)
         : await createInvoice(payload);
-
-      const savedWithCustomer = { ...saved, customer: form.customer };
-
-      onSaved(savedWithCustomer, isEdit);
+      onSaved({ ...saved, customer: form.customer }, isEdit);
       onClose();
     } catch (err) {
       setError(err.message ?? 'Something went wrong.');
@@ -351,7 +467,6 @@ function InvoiceModal({ invoice, onClose, onSaved }) {
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-
         <div className={styles.modalHeader}>
           <h2>{isEdit ? `Edit ${invoice.invoiceNumber}` : 'New Invoice'}</h2>
           <button className={styles.modalClose} onClick={onClose}>✕</button>
@@ -360,7 +475,6 @@ function InvoiceModal({ invoice, onClose, onSaved }) {
         {error && <div className={styles.formError}>{error}</div>}
 
         <form onSubmit={submit} style={{ display: 'contents' }}>
-
           <div className={styles.field}>
             <label>Customer *</label>
             <CustomerPicker value={form.customer} onChange={(c) => set('customer', c)} />
@@ -469,13 +583,13 @@ function Toast({ message, onDone }) {
 function sortInvoices(list, sort) {
   return [...list].sort((a, b) => {
     switch (sort) {
-      case 'newest':    return new Date(b.createdAt) - new Date(a.createdAt);
-      case 'oldest':    return new Date(a.createdAt) - new Date(b.createdAt);
-      case 'due_soon':  return new Date(a.dueDate)   - new Date(b.dueDate);
-      case 'due_late':  return new Date(b.dueDate)   - new Date(a.dueDate);
-      case 'amount_hi': return (b.total || 0)         - (a.total || 0);
-      case 'amount_lo': return (a.total || 0)         - (b.total || 0);
-      default:          return 0;
+      case 'newest': return new Date(b.createdAt) - new Date(a.createdAt);
+      case 'oldest': return new Date(a.createdAt) - new Date(b.createdAt);
+      case 'due_soon': return new Date(a.dueDate) - new Date(b.dueDate);
+      case 'due_late': return new Date(b.dueDate) - new Date(a.dueDate);
+      case 'amount_hi': return (b.total || 0) - (a.total || 0);
+      case 'amount_lo': return (a.total || 0) - (b.total || 0);
+      default: return 0;
     }
   });
 }
@@ -483,19 +597,21 @@ function sortInvoices(list, sort) {
 // ── Main Page ──────────────────────────────────────────────────────────────
 
 export default function Invoices() {
-  const [invoices,    setInvoices]    = useState([]);
+  const [invoices, setInvoices] = useState([]);
   const [allInvoices, setAllInvoices] = useState([]);
-  const [filter,      setFilter]      = useState('All');
-  const [search,      setSearch]      = useState('');
-  const [sort,        setSort]        = useState('newest');
-  const [loading,     setLoading]     = useState(true);
-  const [error,       setError]       = useState(null);
-  const [modalInvoice, setModal]      = useState(undefined);
-  const [drawer,      setDrawer]      = useState(null);
-  const [toast,       setToast]       = useState(null);
+  const [filter, setFilter] = useState('All');
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState('newest');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [modalInvoice, setModal] = useState(undefined);
+  const [drawer, setDrawer] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const loadAll = useCallback(() => {
-    getInvoices({}).then(setAllInvoices).catch(() => {});
+    getInvoices({}).then(setAllInvoices).catch(() => { });
   }, []);
 
   const load = useCallback((activeFilter) => {
@@ -517,9 +633,9 @@ export default function Invoices() {
       const q = search.toLowerCase();
       return (
         inv.invoiceNumber?.toString().toLowerCase().includes(q) ||
-        inv.customer?.name?.toLowerCase().includes(q)          ||
-        inv.customer?.email?.toLowerCase().includes(q)         ||
-        inv.customer?.company?.toLowerCase().includes(q)       ||
+        inv.customer?.name?.toLowerCase().includes(q) ||
+        inv.customer?.email?.toLowerCase().includes(q) ||
+        inv.customer?.company?.toLowerCase().includes(q) ||
         inv.status?.toLowerCase().includes(q)
       );
     }),
@@ -548,6 +664,24 @@ export default function Invoices() {
       setInvoices((prev) => [saved, ...prev]);
       setAllInvoices((prev) => [saved, ...prev]);
       setToast('Invoice created');
+    }
+  }
+
+  async function handleDeleteConfirm() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await deleteInvoice(deleteTarget._id);
+      setInvoices((prev) => prev.filter((inv) => inv._id !== deleteTarget._id));
+      setAllInvoices((prev) => prev.filter((inv) => inv._id !== deleteTarget._id));
+      if (drawer?._id === deleteTarget._id) setDrawer(null);
+      setToast('Invoice deleted');
+      setDeleteTarget(null);
+    } catch (err) {
+      setError(err.message || 'Failed to delete invoice.');
+      setDeleteTarget(null);
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -630,7 +764,7 @@ export default function Invoices() {
               <thead>
                 <tr>
                   <th>Invoice</th><th>Customer</th><th>Issued</th>
-                  <th>Due</th><th>Status</th><th>Amount</th><th></th>
+                  <th>Due</th><th>Status</th><th>Amount</th><th style={{ width: '1%' }}></th>
                 </tr>
               </thead>
               <tbody>
@@ -662,6 +796,13 @@ export default function Invoices() {
                           onClick={(e) => { e.stopPropagation(); setDrawer(inv); }}
                         >
                           👁 View
+                        </button>
+                        <button
+                          className={styles.deleteBtn}
+                          onClick={(e) => { e.stopPropagation(); setDeleteTarget(inv); }}
+                          title="Delete invoice"
+                        >
+                          🗑
                         </button>
                       </td>
                     </tr>
@@ -696,10 +837,20 @@ export default function Invoices() {
             setDrawer(updated);
             handleSaved(updated, true);
           }}
+          onDelete={(inv) => setDeleteTarget(inv)}
+        />
+      )}
+
+      {deleteTarget && (
+        <DeleteConfirmModal
+          invoice={deleteTarget}
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={handleDeleteConfirm}
+          deleting={deleting}
         />
       )}
 
       {toast && <Toast message={`✓ ${toast}`} onDone={() => setToast(null)} />}
     </div>
   );
-} 
+}

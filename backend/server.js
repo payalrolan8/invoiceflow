@@ -8,6 +8,7 @@ import cors from 'cors';
 import connectDB from './config/db.js';
 import errorHandler from './middleware/errorHandler.js';
 
+import authRoutes      from './routes/auth.js';
 import dashboardRoutes from './routes/dashboard.js';
 import customerRoutes  from './routes/customers.js';
 import invoiceRoutes   from './routes/invoices.js';
@@ -32,10 +33,6 @@ app.use(cors({
 }));
 
 // ── Webhook ONLY — must be before express.json() ──────────────────────────────
-// The /webhook route inside reminderRoutes uses express.raw() to read the raw
-// Buffer that Resend POSTs. If express.json() runs first it consumes the stream
-// and req.body becomes undefined inside the webhook handler.
-// We pin just this one path so no other reminder route is affected.
 app.post('/api/reminders/webhook', express.raw({ type: 'application/json' }), reminderRoutes);
 
 // ── JSON body parsing for everything else ─────────────────────────────────────
@@ -45,10 +42,11 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'InvoiceFlow API is running 🚀', timestamp: new Date() });
 });
 
+app.use('/api/auth',      authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/invoices',  invoiceRoutes);
-app.use('/api/reminders', reminderRoutes); // all other reminder routes get parsed JSON here
+app.use('/api/reminders', reminderRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ success: false, error: `Route ${req.originalUrl} not found` });

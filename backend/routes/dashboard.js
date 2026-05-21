@@ -1,16 +1,15 @@
-// routes/dashboard.js  [CORRECTED]
 import express from 'express';
 import Invoice from '../models/Invoice.js';
 import Customer from '../models/Customer.js';
+import { protect } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
+router.use(protect);
 
 router.get('/', async (req, res, next) => {
   try {
-    // BUG FIXED: backend was missing paidCount, pendingCount, outstanding,
-    // overdueAmount, overdueCount — all of which Dashboard.jsx reads from stats.
-    // totalCustomers was also returned outside stats{} but frontend reads stats.totalCustomers.
     const [invoiceStats] = await Invoice.aggregate([
+      { $match: { createdBy: req.user._id } },
       {
         $group: {
           _id: null,
@@ -25,9 +24,9 @@ router.get('/', async (req, res, next) => {
       },
     ]);
 
-    const totalCustomers = await Customer.countDocuments();
+    const totalCustomers = await Customer.countDocuments({ createdBy: req.user._id });
 
-    const recentInvoices = await Invoice.find()
+    const recentInvoices = await Invoice.find({ createdBy: req.user._id })
       .populate('customer', 'name email')
       .sort({ createdAt: -1 })
       .limit(5);
@@ -38,7 +37,6 @@ router.get('/', async (req, res, next) => {
     };
 
     res.json({
-      // BUG FIXED: totalCustomers is now inside stats so frontend can read stats.totalCustomers
       stats: { ...(invoiceStats || defaultStats), totalCustomers },
       recentInvoices,
     });

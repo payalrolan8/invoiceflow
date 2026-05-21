@@ -283,7 +283,6 @@ function EditMode({ invoice, onSaved, onCancel }) {
         </div>
       )}
 
-      {/* ── Customer (read-only in edit) ── */}
       {customer && (
         <div className={styles.editSection}>
           <div className={styles.editSectionTitle}>Customer</div>
@@ -298,13 +297,11 @@ function EditMode({ invoice, onSaved, onCancel }) {
         </div>
       )}
 
-      {/* ── Status ── */}
       <div className={styles.editSection}>
         <div className={styles.editSectionTitle}>Status</div>
         <StatusDropdown status={form.status} onChange={(s) => set('status', s)} />
       </div>
 
-      {/* ── Dates ── */}
       <div className={styles.editSection}>
         <div className={styles.editSectionTitle}>Dates</div>
         <div className={styles.dateRow}>
@@ -321,7 +318,6 @@ function EditMode({ invoice, onSaved, onCancel }) {
         </div>
       </div>
 
-      {/* ── Line items ── */}
       <div className={styles.editSection}>
         <div className={styles.editSectionTitle}>Line Items</div>
         <div className={styles.lineItems}>
@@ -355,7 +351,6 @@ function EditMode({ invoice, onSaved, onCancel }) {
         </div>
       </div>
 
-      {/* ── Totals ── */}
       <div className={styles.totalsBox}>
         <div className={styles.totalRow}>
           <span>Subtotal</span><span>₹{subtotal.toLocaleString('en-IN')}</span>
@@ -374,7 +369,6 @@ function EditMode({ invoice, onSaved, onCancel }) {
         </div>
       </div>
 
-      {/* ── Notes ── */}
       <div className={styles.editSection}>
         <div className={styles.editSectionTitle}>Notes</div>
         <textarea className={styles.textarea} rows={3}
@@ -382,7 +376,6 @@ function EditMode({ invoice, onSaved, onCancel }) {
           placeholder="Payment terms, bank details…" />
       </div>
 
-      {/* ── Footer ── */}
       <div className={styles.editFooter}>
         <button type="button" className={styles.btnGhost} onClick={onCancel}>Cancel</button>
         <button type="submit" className={styles.btnBlue} disabled={saving}>
@@ -397,7 +390,7 @@ function EditMode({ invoice, onSaved, onCancel }) {
 
 // ── Main Drawer ────────────────────────────────────────────────────────────
 
-export default function InvoiceDrawer({ invoice, initialMode = 'view', onClose, onSaved }) {
+export default function InvoiceDrawer({ invoice, initialMode = 'view', onClose, onSaved, onDelete }) {
   const [mode, setMode]       = useState(initialMode);
   const [current, setCurrent] = useState(invoice);
   const [animating, setAnimating] = useState(false);
@@ -456,7 +449,6 @@ export default function InvoiceDrawer({ invoice, initialMode = 'view', onClose, 
           </div>
 
           <div className={styles.drawerHeaderActions}>
-            {/* View / Edit toggle pill */}
             <div className={styles.modePill}>
               <button
                 className={`${styles.modeBtn} ${!isEdit ? styles.modeBtnActive : ''}`}
@@ -473,6 +465,16 @@ export default function InvoiceDrawer({ invoice, initialMode = 'view', onClose, 
                 ✎ Edit
               </button>
             </div>
+
+            {onDelete && (
+              <button
+                className={styles.drawerDeleteBtn}
+                onClick={() => onDelete(current)}
+                title="Delete invoice"
+              >
+                🗑
+              </button>
+            )}
 
             <button className={styles.closeBtn} onClick={onClose} title="Close (Esc)">✕</button>
           </div>

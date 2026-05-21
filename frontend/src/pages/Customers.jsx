@@ -5,7 +5,7 @@ import { Card, CardBody } from '../components/Card';
 import { PlusIcon, SearchIcon } from '../components/Icons';
 import InvoiceDrawer from '../components/InvoiceDrawer';
 import {
-  getCustomers, createCustomer, updateCustomer, updateCustomerStatus,
+  getCustomers, createCustomer, updateCustomer,
 } from '../api/customers';
 import { getInvoices } from '../api/invoices';
 
@@ -20,48 +20,46 @@ function fmt(amount) {
 }
 
 const STATUS_META = {
-  active:   { label: 'Active',   color: '#22c55e', bg: 'rgba(34,197,94,0.12)'   },
-  pending:  { label: 'Pending',  color: '#f97316', bg: 'rgba(249,115,22,0.12)'  },
+  active: { label: 'Active', color: '#22c55e', bg: 'rgba(34,197,94,0.12)' },
+  pending: { label: 'Pending', color: '#f97316', bg: 'rgba(249,115,22,0.12)' },
   inactive: { label: 'Inactive', color: '#cbd5e1', bg: 'rgba(203,213,225,0.12)' },
 };
 
 const FILTER_COLORS = {
-  All:      { bg: 'var(--blue)',  text: '#fff' },
-  Active:   { bg: '#22c55e',      text: '#fff' },
-  Pending:  { bg: '#f97316',      text: '#fff' },
-  Inactive: { bg: '#6b7280',      text: '#fff' },
+  All: { bg: 'var(--blue)', text: '#fff' },
+  Active: { bg: '#22c55e', text: '#fff' },
+  Pending: { bg: '#f97316', text: '#fff' },
+  Inactive: { bg: '#6b7280', text: '#fff' },
 };
 
 const INV_BADGE = {
-  paid:      { color: 'var(--green)',  bg: 'var(--green-bg)'       },
-  pending:   { color: 'var(--orange)', bg: 'var(--orange-bg)'      },
-  overdue:   { color: 'var(--red)',    bg: 'var(--red-bg)'         },
-  draft:     { color: 'var(--text2)',  bg: 'rgba(107,114,128,0.1)' },
-  sent:      { color: '#60a5fa',       bg: 'rgba(59,130,246,0.12)' },
-  cancelled: { color: 'var(--text3)',  bg: 'rgba(74,86,106,0.15)'  },
+  paid: { color: 'var(--green)', bg: 'var(--green-bg)' },
+  pending: { color: 'var(--orange)', bg: 'var(--orange-bg)' },
+  overdue: { color: 'var(--red)', bg: 'var(--red-bg)' },
+  draft: { color: 'var(--text2)', bg: 'rgba(107,114,128,0.1)' },
+  sent: { color: '#60a5fa', bg: 'rgba(59,130,246,0.12)' },
+  cancelled: { color: 'var(--text3)', bg: 'rgba(74,86,106,0.15)' },
 };
 
-// ── Country codes ──────────────────────────────────────────────────────────
-
 const COUNTRY_CODES = [
-  { code: '+91',  flag: '🇮🇳', name: 'India',          digits: 10 },
-  { code: '+1',   flag: '🇺🇸', name: 'USA / Canada',   digits: 10 },
-  { code: '+44',  flag: '🇬🇧', name: 'UK',             digits: 10 },
-  { code: '+61',  flag: '🇦🇺', name: 'Australia',      digits: 9  },
-  { code: '+971', flag: '🇦🇪', name: 'UAE',            digits: 9  },
-  { code: '+65',  flag: '🇸🇬', name: 'Singapore',      digits: 8  },
-  { code: '+60',  flag: '🇲🇾', name: 'Malaysia',       digits: 9  },
-  { code: '+49',  flag: '🇩🇪', name: 'Germany',        digits: 10 },
-  { code: '+33',  flag: '🇫🇷', name: 'France',         digits: 9  },
-  { code: '+81',  flag: '🇯🇵', name: 'Japan',          digits: 10 },
-  { code: '+86',  flag: '🇨🇳', name: 'China',          digits: 11 },
-  { code: '+55',  flag: '🇧🇷', name: 'Brazil',         digits: 11 },
-  { code: '+27',  flag: '🇿🇦', name: 'South Africa',   digits: 9  },
-  { code: '+234', flag: '🇳🇬', name: 'Nigeria',        digits: 10 },
-  { code: '+92',  flag: '🇵🇰', name: 'Pakistan',       digits: 10 },
-  { code: '+880', flag: '🇧🇩', name: 'Bangladesh',     digits: 10 },
-  { code: '+94',  flag: '🇱🇰', name: 'Sri Lanka',      digits: 9  },
-  { code: '+977', flag: '🇳🇵', name: 'Nepal',          digits: 10 },
+  { code: '+91', flag: '🇮🇳', name: 'India', digits: 10 },
+  { code: '+1', flag: '🇺🇸', name: 'USA / Canada', digits: 10 },
+  { code: '+44', flag: '🇬🇧', name: 'UK', digits: 10 },
+  { code: '+61', flag: '🇦🇺', name: 'Australia', digits: 9 },
+  { code: '+971', flag: '🇦🇪', name: 'UAE', digits: 9 },
+  { code: '+65', flag: '🇸🇬', name: 'Singapore', digits: 8 },
+  { code: '+60', flag: '🇲🇾', name: 'Malaysia', digits: 9 },
+  { code: '+49', flag: '🇩🇪', name: 'Germany', digits: 10 },
+  { code: '+33', flag: '🇫🇷', name: 'France', digits: 9 },
+  { code: '+81', flag: '🇯🇵', name: 'Japan', digits: 10 },
+  { code: '+86', flag: '🇨🇳', name: 'China', digits: 11 },
+  { code: '+55', flag: '🇧🇷', name: 'Brazil', digits: 11 },
+  { code: '+27', flag: '🇿🇦', name: 'South Africa', digits: 9 },
+  { code: '+234', flag: '🇳🇬', name: 'Nigeria', digits: 10 },
+  { code: '+92', flag: '🇵🇰', name: 'Pakistan', digits: 10 },
+  { code: '+880', flag: '🇧🇩', name: 'Bangladesh', digits: 10 },
+  { code: '+94', flag: '🇱🇰', name: 'Sri Lanka', digits: 9 },
+  { code: '+977', flag: '🇳🇵', name: 'Nepal', digits: 10 },
 ];
 
 function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
@@ -82,20 +80,12 @@ function Highlight({ text = '', query = '' }) {
 
 const FILTER_OPTIONS = ['All', 'Active', 'Pending', 'Inactive'];
 const SORT_OPTIONS = [
-  { value: 'newest',  label: 'Newest first'  },
-  { value: 'oldest',  label: 'Oldest first'  },
-  { value: 'name_az', label: 'Name A → Z'    },
-  { value: 'name_za', label: 'Name Z → A'    },
-  { value: 'billed',  label: 'Highest billed'},
+  { value: 'newest', label: 'Newest first' },
+  { value: 'oldest', label: 'Oldest first' },
+  { value: 'name_az', label: 'Name A → Z' },
+  { value: 'name_za', label: 'Name Z → A' },
+  { value: 'billed', label: 'Highest billed' },
 ];
-
-function todayDate() { return new Date().toISOString().split('T')[0]; }
-const EMPTY_LINE = () => ({ description: '', quantity: 1, unitPrice: '', total: 0 });
-const EMPTY_FORM = {
-  name: '', email: '', phoneCode: '+91', phone: '', company: '', address: '',
-  inv_issueDate: todayDate(), inv_dueDate: '',
-  inv_tax: '0', inv_notes: '', inv_lineItems: [EMPTY_LINE()],
-};
 
 // ── PhoneInput ─────────────────────────────────────────────────────────────
 
@@ -171,65 +161,41 @@ function PhoneInput({ codeValue, phoneValue, onCodeChange, onPhoneChange, touche
 }
 
 // ── Status Cell ────────────────────────────────────────────────────────────
+// Status is fully derived from invoice data on the backend — read-only, no manual override.
 
-function StatusCell({ customer, onChange }) {
-  const [open, setOpen]     = useState(false);
-  const [saving, setSaving] = useState(false);
-  const ref = useRef(null);
+function StatusCell({ customer }) {
   const current = getStatus(customer);
   const meta = STATUS_META[current];
 
-  useEffect(() => {
-    function handle(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
-    if (open) document.addEventListener('mousedown', handle);
-    return () => document.removeEventListener('mousedown', handle);
-  }, [open]);
-
-  async function pick(val) {
-    if (val === current) { setOpen(false); return; }
-    setSaving(true); setOpen(false);
-    try { const updated = await updateCustomerStatus(customer._id, val); onChange(updated); }
-    finally { setSaving(false); }
-  }
+  const titles = {
+    active: 'Has unpaid/pending invoices',
+    pending: 'No invoices yet',
+    inactive: 'All invoices paid, no activity in 90+ days',
+  };
 
   return (
-    <div className={styles.statusCell} ref={ref}>
-      <button className={styles.statusBadge}
-        style={{ color: meta.color, background: meta.bg }}
-        onClick={() => setOpen((v) => !v)} disabled={saving}>
-        <span className={styles.dot} style={{ background: meta.color }} />
-        {saving ? '…' : meta.label}
-        <span className={styles.caret}>▾</span>
-      </button>
-      {open && (
-        <div className={styles.dropdown}>
-          {Object.entries(STATUS_META).map(([val, m]) => (
-            <button key={val}
-              className={`${styles.dropItem} ${val === current ? styles.dropItemActive : ''}`}
-              onClick={() => pick(val)}>
-              <span className={styles.dot} style={{ background: m.color }} />
-              {m.label}
-              {val === current && <span className={styles.checkmark}>✓</span>}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+    <span
+      className={styles.statusBadge}
+      style={{ color: meta.color, background: meta.bg, cursor: 'default' }}
+      title={titles[current]}
+    >
+      <span className={styles.dot} style={{ background: meta.color }} />
+      {meta.label}
+    </span>
   );
 }
 
-// ── Customer Form Modal ────────────────────────────────────────────────────
+// ── Customer Modal ─────────────────────────────────────────────────────────
 
-function CustomerModal({ customer, onClose, onSaved }) {
+function CustomerModal({ customer, onClose, onSaved, onInvoiceSaved }) {
   const isEdit = !!customer;
 
   const [activeTab, setActiveTab] = useState('details');
   const [drawerInvoice, setDrawerInvoice] = useState(null);
-  const [drawerMode,    setDrawerMode]    = useState('view');
-  const [invoices,   setInvoices]   = useState([]);
+  const [drawerMode, setDrawerMode] = useState('view');
+  const [invoices, setInvoices] = useState([]);
   const [invLoading, setInvLoading] = useState(false);
 
-  // Parse existing phone into code + number for edit mode
   function parsePhone(raw) {
     if (!raw) return { code: '+91', number: '' };
     const match = COUNTRY_CODES.find((c) => raw.startsWith(c.code));
@@ -239,19 +205,17 @@ function CustomerModal({ customer, onClose, onSaved }) {
 
   const parsedPhone = isEdit ? parsePhone(customer.phone) : { code: '+91', number: '' };
 
-  const [form, setForm] = useState(isEdit ? {
-    name:      customer.name    || '',
-    email:     customer.email   || '',
+  const [form, setForm] = useState({
+    name: isEdit ? customer.name || '' : '',
+    email: isEdit ? customer.email || '' : '',
     phoneCode: parsedPhone.code,
-    phone:     parsedPhone.number,
-    company:   customer.company || '',
-    address:   customer.address || '',
-    inv_issueDate: todayDate(), inv_dueDate: '',
-    inv_tax: '0', inv_notes: '', inv_lineItems: [EMPTY_LINE()],
-  } : { ...EMPTY_FORM, inv_lineItems: [EMPTY_LINE()] });
+    phone: parsedPhone.number,
+    company: isEdit ? customer.company || '' : '',
+    address: isEdit ? customer.address || '' : '',
+  });
 
-  const [saving,  setSaving]  = useState(false);
-  const [error,   setError]   = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
   const [touched, setTouched] = useState({});
 
   useEffect(() => {
@@ -262,7 +226,7 @@ function CustomerModal({ customer, onClose, onSaved }) {
         const cid = typeof i.customer === 'object' ? i.customer?._id : i.customer;
         return cid === customer._id;
       })))
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setInvLoading(false));
   }, [isEdit, customer?._id]);
 
@@ -279,49 +243,20 @@ function CustomerModal({ customer, onClose, onSaved }) {
     if (error) setError(null);
   }
 
-  function setLine(idx, field, raw) {
-    setForm((f) => {
-      const items = f.inv_lineItems.map((l, i) => {
-        if (i !== idx) return l;
-        const updated = { ...l, [field]: raw };
-        const qty   = parseFloat(field === 'quantity'  ? raw : updated.quantity)  || 0;
-        const price = parseFloat(field === 'unitPrice' ? raw : updated.unitPrice) || 0;
-        updated.total = parseFloat((qty * price).toFixed(2));
-        return updated;
-      });
-      return { ...f, inv_lineItems: items };
-    });
-  }
-  function addLine()       { setForm((f) => ({ ...f, inv_lineItems: [...f.inv_lineItems, EMPTY_LINE()] })); }
-  function removeLine(idx) { setForm((f) => ({ ...f, inv_lineItems: f.inv_lineItems.filter((_, i) => i !== idx) })); }
-
-  const subtotal = form.inv_lineItems.reduce((s, l) => s + (l.total || 0), 0);
-  const taxAmt   = parseFloat(((subtotal * (parseFloat(form.inv_tax) || 0)) / 100).toFixed(2));
-  const invTotal = parseFloat((subtotal + taxAmt).toFixed(2));
-
-  function getPhoneDigits() {
-    return form.phone.replace(/\D/g, '').length;
-  }
-  function getExpectedDigits() {
-    return COUNTRY_CODES.find((c) => c.code === form.phoneCode)?.digits ?? 10;
-  }
   function isPhoneValid() {
-    if (!form.phone) return true; // phone is optional
-    return getPhoneDigits() === getExpectedDigits();
+    if (!form.phone) return true;
+    const digits = form.phone.replace(/\D/g, '').length;
+    const expected = COUNTRY_CODES.find((c) => c.code === form.phoneCode)?.digits ?? 10;
+    return digits === expected;
   }
 
   function validate() {
-    if (!form.name.trim())  return 'Full name is required.';
+    if (!form.name.trim()) return 'Full name is required.';
     if (!form.email.trim()) return 'Email address is required.';
     if (!/^\S+@\S+\.\S+$/.test(form.email)) return 'Enter a valid email address.';
     if (form.phone && !isPhoneValid()) {
       const cc = COUNTRY_CODES.find((c) => c.code === form.phoneCode);
-      return `Phone number must be ${cc?.digits ?? 10} digits for ${cc?.name ?? 'selected country'}.`;
-    }
-    if (!isEdit) {
-      if (!form.inv_dueDate) return 'Invoice due date is required.';
-      if (!form.inv_lineItems.length) return 'Add at least one line item.';
-      if (form.inv_lineItems.some((l) => !l.description.trim())) return 'All line items need a description.';
+      return `Phone must be ${cc?.digits ?? 10} digits for ${cc?.name ?? 'selected country'}.`;
     }
     return null;
   }
@@ -332,28 +267,19 @@ function CustomerModal({ customer, onClose, onSaved }) {
     if (err) { setError(err); return; }
     setSaving(true); setError(null);
     try {
-      // Combine code + number into full phone string
       const fullPhone = form.phone ? `${form.phoneCode} ${form.phone}` : '';
-      const cp = {
-        name: form.name, email: form.email,
+      const payload = {
+        name: form.name.trim(),
+        email: form.email.trim(),
         phone: fullPhone,
-        company: form.company, address: form.address,
+        company: form.company.trim(),
+        address: form.address.trim(),
       };
-      const ip = !isEdit ? {
-        issueDate: form.inv_issueDate, dueDate: form.inv_dueDate,
-        tax: parseFloat(form.inv_tax) || 0, notes: form.inv_notes,
-        lineItems: form.inv_lineItems.map((l) => ({
-          description: l.description,
-          quantity:    parseFloat(l.quantity)  || 1,
-          unitPrice:   parseFloat(l.unitPrice) || 0,
-          total:       l.total,
-        })),
-      } : null;
       const saved = isEdit
-        ? await updateCustomer(customer._id, cp)
-        : await createCustomer({ ...cp, invoice: ip });
-      onSaved(saved, isEdit);
+        ? await updateCustomer(customer._id, payload)
+        : await createCustomer(payload);
       onClose();
+      onSaved(saved, isEdit);
     } catch (err) {
       setError(err.message);
       setSaving(false);
@@ -363,8 +289,8 @@ function CustomerModal({ customer, onClose, onSaved }) {
   function handleInvoiceSaved(updated) {
     setInvoices((prev) => prev.map((i) => i._id === updated._id ? updated : i));
     setDrawerInvoice(updated);
+    onInvoiceSaved?.();   // ← refetch customer list so status updates
   }
-
   function openInvoiceView(inv) {
     setActiveTab(inv._id);
     setDrawerInvoice(inv);
@@ -383,7 +309,7 @@ function CustomerModal({ customer, onClose, onSaved }) {
     setDrawerMode('view');
   }
 
-  const nameErr  = touched.name  && !form.name.trim();
+  const nameErr = touched.name && !form.name.trim();
   const emailErr = touched.email && !/^\S+@\S+\.\S+$/.test(form.email);
 
   const tabs = [
@@ -395,26 +321,28 @@ function CustomerModal({ customer, onClose, onSaved }) {
 
   return (
     <>
-      <div className={styles.fullscreenOverlay}
-        onClick={(e) => e.target === e.currentTarget && onClose()}>
-        <div className={styles.fullscreenModal}>
+      <div
+        className={styles.modalOverlay}
+        onClick={(e) => e.target === e.currentTarget && onClose()}
+      >
+        <div className={styles.compactModal}>
 
-          {/* Header */}
-          <div className={styles.fsHeader}>
+          {/* ── Header ── */}
+          <div className={styles.compactHeader}>
             <div>
-              <h2 className={styles.fsTitle}>
-                {isEdit ? `Edit — ${customer.name}` : 'New Customer & Invoice'}
+              <h2 className={styles.compactTitle}>
+                {isEdit ? `Edit — ${customer.name}` : 'New Customer'}
               </h2>
-              <p className={styles.fsSub}>
+              <p className={styles.compactSub}>
                 {isEdit
-                  ? `${invoices.length} invoice${invoices.length !== 1 ? 's' : ''} · click a tab to view · double-click to edit`
-                  : 'Customer info + linked invoice created together'}
+                  ? `${invoices.length} invoice${invoices.length !== 1 ? 's' : ''} · click a tab to view`
+                  : 'Fill in the details below to add a new customer'}
               </p>
             </div>
             <button className={styles.closeBtn} onClick={onClose}>✕</button>
           </div>
 
-          {/* Tabs (edit mode only) */}
+          {/* ── Tabs (edit mode only) ── */}
           {isEdit && (
             <div className={styles.modalTabs}>
               {tabs.map((t) => {
@@ -422,7 +350,8 @@ function CustomerModal({ customer, onClose, onSaved }) {
                 const isInvTab = t.id !== 'details';
                 const isActiveTab = activeTab === t.id;
                 return (
-                  <button key={t.id}
+                  <button
+                    key={t.id}
                     className={`${styles.modalTab} ${isActiveTab ? styles.modalTabActive : ''}`}
                     onClick={() => {
                       if (!isInvTab) {
@@ -433,11 +362,14 @@ function CustomerModal({ customer, onClose, onSaved }) {
                         const inv = invoices.find((i) => i._id === t.id);
                         if (inv) openInvoiceView(inv);
                       }
-                    }}>
+                    }}
+                  >
                     {t.label}
                     {badge && (
-                      <span className={styles.tabBadge}
-                        style={{ color: badge.color, background: badge.bg }}>
+                      <span
+                        className={styles.tabBadge}
+                        style={{ color: badge.color, background: badge.bg }}
+                      >
                         {cap(t.badge)}
                       </span>
                     )}
@@ -447,155 +379,82 @@ function CustomerModal({ customer, onClose, onSaved }) {
                   </button>
                 );
               })}
-              {invLoading && <span className={styles.invLoadingMsg}>Loading invoices…</span>}
+              {invLoading && <span className={styles.invLoadingMsg}>Loading…</span>}
             </div>
           )}
 
           {error && <div className={styles.errorInModal}>⚠ {error}</div>}
 
-          {/* ── Customer Details tab ── */}
+          {/* ── Details tab ── */}
           {activeTab === 'details' && (
-            <form onSubmit={handleSubmit} className={styles.fsBody} noValidate>
-              <div className={styles.fsCols}>
+            <form onSubmit={handleSubmit} className={styles.compactBody} noValidate>
 
-                {/* LEFT — customer fields */}
-                <div className={styles.fsCol}>
-                  <div className={styles.sectionDivider}><span>Customer Details</span></div>
+              <div className={styles.sectionDivider}><span>Customer Details</span></div>
 
-                  <div className={styles.formRow}>
-                    <div className={styles.field}>
-                      <label className={styles.label}>Full Name <span className={styles.req}>*</span></label>
-                      <input name="name" value={form.name} onChange={handleChange} autoFocus
-                        placeholder="Priya Mehta"
-                        className={`${styles.input} ${nameErr ? styles.inputErr : ''}`} />
-                      {nameErr && <span className={styles.fieldErr}>Name is required</span>}
-                    </div>
-                    <div className={styles.field}>
-                      <label className={styles.label}>Email Address <span className={styles.req}>*</span></label>
-                      <input name="email" type="email" value={form.email} onChange={handleChange}
-                        placeholder="priya@company.com"
-                        className={`${styles.input} ${emailErr ? styles.inputErr : ''}`} />
-                      {emailErr && <span className={styles.fieldErr}>Enter a valid email</span>}
-                    </div>
-                  </div>
-
-                  <div className={styles.formRow}>
-                    <div className={styles.field}>
-                      <label className={styles.label}>Phone Number</label>
-                      <PhoneInput
-                        codeValue={form.phoneCode}
-                        phoneValue={form.phone}
-                        onCodeChange={(code) => setForm((f) => ({ ...f, phoneCode: code }))}
-                        onPhoneChange={(val) => {
-                          setForm((f) => ({ ...f, phone: val }));
-                          setTouched((t) => ({ ...t, phone: true }));
-                        }}
-                        touched={touched.phone}
-                      />
-                    </div>
-                    <div className={styles.field}>
-                      <label className={styles.label}>Company</label>
-                      <input name="company" value={form.company} onChange={handleChange}
-                        placeholder="TechVista Pvt Ltd" className={styles.input} />
-                    </div>
-                  </div>
-
-                  <div className={styles.field}>
-                    <label className={styles.label}>Address</label>
-                    <input name="address" value={form.address} onChange={handleChange}
-                      placeholder="Koramangala, Bengaluru" className={styles.input} />
-                  </div>
+              <div className={styles.formRow}>
+                <div className={styles.field}>
+                  <label className={styles.label}>Full Name <span className={styles.req}>*</span></label>
+                  <input
+                    name="name" value={form.name} onChange={handleChange} autoFocus
+                    placeholder="Priya Mehta"
+                    className={`${styles.input} ${nameErr ? styles.inputErr : ''}`}
+                  />
+                  {nameErr && <span className={styles.fieldErr}>Name is required</span>}
                 </div>
-
-                {/* RIGHT — invoice (create only) */}
-                {!isEdit && (
-                  <div className={styles.fsCol}>
-                    <div className={styles.sectionDivider}><span>Invoice Details</span></div>
-
-                    <div className={styles.formRow}>
-                      <div className={styles.field}>
-                        <label className={styles.label}>Issue Date</label>
-                        <input type="date" name="inv_issueDate" value={form.inv_issueDate}
-                          onChange={handleChange} className={styles.input} />
-                      </div>
-                      <div className={styles.field}>
-                        <label className={styles.label}>Due Date <span className={styles.req}>*</span></label>
-                        <input type="date" name="inv_dueDate" value={form.inv_dueDate}
-                          onChange={handleChange} className={styles.input}
-                          placeholder="Select due date" />
-                      </div>
-                    </div>
-
-                    <div className={styles.field}>
-                      <label className={styles.label}>Line Items <span className={styles.req}>*</span></label>
-                      <div className={styles.lineItems}>
-                        <div className={styles.lineHeaderRow}>
-                          <span>Description</span>
-                          <span style={{ textAlign: 'center' }}>Qty</span>
-                          <span>Unit Price (₹)</span>
-                          <span style={{ textAlign: 'right' }}>Total</span>
-                          <span />
-                        </div>
-                        {form.inv_lineItems.map((line, idx) => (
-                          <div key={idx} className={styles.lineRow}>
-                            <input className={styles.lineDesc} placeholder="e.g. Web Development"
-                              value={line.description}
-                              onChange={(e) => setLine(idx, 'description', e.target.value)} />
-                            <input className={styles.lineQty} type="number" min="1" placeholder="1"
-                              value={line.quantity}
-                              onChange={(e) => setLine(idx, 'quantity', e.target.value)} />
-                            <input className={styles.linePrice} type="number" min="0" step="0.01" placeholder="0.00"
-                              value={line.unitPrice}
-                              onChange={(e) => setLine(idx, 'unitPrice', e.target.value)} />
-                            <span className={styles.lineTotal}>₹{Number(line.total).toLocaleString('en-IN')}</span>
-                            <button type="button" className={styles.removeBtn}
-                              onClick={() => removeLine(idx)}
-                              disabled={form.inv_lineItems.length === 1} title="Remove">✕</button>
-                          </div>
-                        ))}
-                        <button type="button" className={styles.addLineBtn} onClick={addLine}>
-                          + Add line item
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className={styles.totalsBox}>
-                      <div className={styles.totalRow}>
-                        <span>Subtotal</span><span>₹{subtotal.toLocaleString('en-IN')}</span>
-                      </div>
-                      <div className={styles.totalRow}>
-                        <span>Tax&nbsp;
-                          <input className={styles.taxInput} type="number" min="0" max="100" step="0.5"
-                            name="inv_tax" value={form.inv_tax} onChange={handleChange} />%
-                        </span>
-                        <span>₹{taxAmt.toLocaleString('en-IN')}</span>
-                      </div>
-                      <div className={`${styles.totalRow} ${styles.grandTotal}`}>
-                        <span>Total</span><span>₹{invTotal.toLocaleString('en-IN')}</span>
-                      </div>
-                    </div>
-
-                    <div className={styles.field}>
-                      <label className={styles.label}>Notes</label>
-                      <textarea name="inv_notes" value={form.inv_notes} onChange={handleChange}
-                        rows={3} placeholder="Payment terms, bank details…" className={styles.textarea} />
-                    </div>
-                  </div>
-                )}
+                <div className={styles.field}>
+                  <label className={styles.label}>Email Address <span className={styles.req}>*</span></label>
+                  <input
+                    name="email" type="email" value={form.email} onChange={handleChange}
+                    placeholder="priya@company.com"
+                    className={`${styles.input} ${emailErr ? styles.inputErr : ''}`}
+                  />
+                  {emailErr && <span className={styles.fieldErr}>Enter a valid email</span>}
+                </div>
               </div>
 
-              <div className={styles.fsFooter}>
+              <div className={styles.formRow}>
+                <div className={styles.field}>
+                  <label className={styles.label}>Phone Number</label>
+                  <PhoneInput
+                    codeValue={form.phoneCode}
+                    phoneValue={form.phone}
+                    onCodeChange={(code) => setForm((f) => ({ ...f, phoneCode: code }))}
+                    onPhoneChange={(val) => {
+                      setForm((f) => ({ ...f, phone: val }));
+                      setTouched((t) => ({ ...t, phone: true }));
+                    }}
+                    touched={touched.phone}
+                  />
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label}>Company</label>
+                  <input
+                    name="company" value={form.company} onChange={handleChange}
+                    placeholder="TechVista Pvt Ltd" className={styles.input}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.field}>
+                <label className={styles.label}>Address</label>
+                <input
+                  name="address" value={form.address} onChange={handleChange}
+                  placeholder="Koramangala, Bengaluru" className={styles.input}
+                />
+              </div>
+
+              <div className={styles.compactFooter}>
                 <button type="button" className={styles.btnGhost} onClick={onClose}>Cancel</button>
                 <button type="submit" className={styles.btnBlue} disabled={saving}>
                   {saving
                     ? <><span className={styles.spinner} /> Saving…</>
-                    : isEdit ? 'Save Customer' : '+ Add Customer & Invoice'}
+                    : isEdit ? 'Save Customer' : '+ Add Customer'}
                 </button>
               </div>
             </form>
           )}
 
-          {/* ── Invoice tab ── */}
+          {/* ── Invoice tab (edit mode only) ── */}
           {activeTab !== 'details' && (
             <div className={styles.invTabBody}>
               <div className={styles.invTabList}>
@@ -603,25 +462,31 @@ function CustomerModal({ customer, onClose, onSaved }) {
                   const badge = INV_BADGE[inv.status] || INV_BADGE.draft;
                   const isActive = drawerInvoice?._id === inv._id;
                   return (
-                    <div key={inv._id}
+                    <div
+                      key={inv._id}
                       className={`${styles.invTabRow} ${isActive ? styles.invTabRowActive : ''}`}
                       onClick={() => openInvoiceView(inv)}
                       onDoubleClick={(e) => openInvoiceEdit(e, inv)}
-                      title="Click to view · Double-click to edit">
+                      title="Click to view · Double-click to edit"
+                    >
                       <span className={styles.invTabNum}>#{inv.invoiceNumber}</span>
-                      <span className={styles.invTabBadge}
-                        style={{ color: badge.color, background: badge.bg }}>
+                      <span
+                        className={styles.invTabBadge}
+                        style={{ color: badge.color, background: badge.bg }}
+                      >
                         {cap(inv.status)}
                       </span>
                       <span className={styles.invTabTotal}>
-                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(inv.total || 0)}
+                        {new Intl.NumberFormat('en-IN', {
+                          style: 'currency', currency: 'INR', maximumFractionDigits: 0,
+                        }).format(inv.total || 0)}
                       </span>
                       <span className={styles.invTabHint}>
                         {isActive && drawerMode === 'edit'
                           ? '✎ editing'
                           : isActive
-                          ? '▸ viewing'
-                          : 'click · dbl-click to edit'}
+                            ? '▸ viewing'
+                            : 'click · dbl-click to edit'}
                       </span>
                     </div>
                   );
@@ -652,12 +517,12 @@ function CustomerModal({ customer, onClose, onSaved }) {
 
 export default function Customers({ onView }) {
   const [customers, setCustomers] = useState([]);
-  const [search,    setSearch]    = useState('');
-  const [filter,    setFilter]    = useState('All');
-  const [sort,      setSort]      = useState('newest');
-  const [loading,   setLoading]   = useState(true);
-  const [error,     setError]     = useState(null);
-  const [modal,     setModal]     = useState(null);
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('All');
+  const [sort, setSort] = useState('newest');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [modal, setModal] = useState(null);
 
   const load = useCallback(() => {
     setLoading(true); setError(null);
@@ -674,19 +539,19 @@ export default function Customers({ onView }) {
       if (!search.trim()) return true;
       const q = search.toLowerCase();
       return (
-        c.name?.toLowerCase().includes(q)    ||
-        c.email?.toLowerCase().includes(q)   ||
+        c.name?.toLowerCase().includes(q) ||
+        c.email?.toLowerCase().includes(q) ||
         c.company?.toLowerCase().includes(q) ||
         c.phone?.includes(q)
       );
     })
     .filter((c) => filter === 'All' ? true : getStatus(c) === filter.toLowerCase())
     .sort((a, b) => {
-      if (sort === 'newest')  return new Date(b.createdAt) - new Date(a.createdAt);
-      if (sort === 'oldest')  return new Date(a.createdAt) - new Date(b.createdAt);
+      if (sort === 'newest') return new Date(b.createdAt) - new Date(a.createdAt);
+      if (sort === 'oldest') return new Date(a.createdAt) - new Date(b.createdAt);
       if (sort === 'name_az') return a.name.localeCompare(b.name);
       if (sort === 'name_za') return b.name.localeCompare(a.name);
-      if (sort === 'billed')  return (b.totalPaid || 0) - (a.totalPaid || 0);
+      if (sort === 'billed') return (b.totalPaid || 0) - (a.totalPaid || 0);
       return 0;
     });
 
@@ -694,14 +559,12 @@ export default function Customers({ onView }) {
     if (f === 'All') return customers.length;
     return customers.filter((c) => getStatus(c) === f.toLowerCase()).length;
   }
-
   function handleSaved(saved, isEdit) {
-    if (isEdit) setCustomers((prev) => prev.map((c) => (c._id === saved._id ? saved : c)));
-    else        setCustomers((prev) => [saved, ...prev]);
-  }
-
-  function handleStatusChange(updated) {
-    setCustomers((prev) => prev.map((c) => (c._id === updated._id ? updated : c)));
+    if (isEdit) {
+      setCustomers((prev) => prev.map((c) => c._id === saved._id ? saved : c));
+    } else {
+      load(); // ← refetch so the new customer gets proper status from the backend
+    }
   }
 
   return (
@@ -727,9 +590,13 @@ export default function Customers({ onView }) {
         <div className={styles.toolbar}>
           <div className={styles.searchWrap}>
             <span className={styles.searchIcon}><SearchIcon /></span>
-            <input type="text" placeholder="Search name, email, company…"
-              value={search} onChange={(e) => setSearch(e.target.value)}
-              className={styles.searchInput} />
+            <input
+              type="text"
+              placeholder="Search name, email, company…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className={styles.searchInput}
+            />
             {search && (
               <button className={styles.clearSearch} onClick={() => setSearch('')} title="Clear">✕</button>
             )}
@@ -749,16 +616,16 @@ export default function Customers({ onView }) {
                     onClick={() => setFilter(f)}
                   >
                     {!isActive && f !== 'All' && (
-                      <span className={styles.pillDot}
-                        style={{ background: STATUS_META[f.toLowerCase()]?.color }} />
+                      <span
+                        className={styles.pillDot}
+                        style={{ background: STATUS_META[f.toLowerCase()]?.color }}
+                      />
                     )}
                     {f}
                     {count > 0 && (
                       <span
                         className={styles.pillCount}
-                        style={isActive
-                          ? { background: 'rgba(255,255,255,0.25)', color: colors.text }
-                          : {}}
+                        style={isActive ? { background: 'rgba(255,255,255,0.25)', color: colors.text } : {}}
                       >
                         {count}
                       </span>
@@ -767,8 +634,11 @@ export default function Customers({ onView }) {
                 );
               })}
             </div>
-            <select className={styles.sortSelect} value={sort}
-              onChange={(e) => setSort(e.target.value)}>
+            <select
+              className={styles.sortSelect}
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+            >
               {SORT_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>
               ))}
@@ -787,9 +657,9 @@ export default function Customers({ onView }) {
               </thead>
               <tbody>
                 {loading ? (
-                  [1,2,3,4,5].map((i) => (
+                  [1, 2, 3, 4, 5].map((i) => (
                     <tr key={i}>
-                      {[1,2,3,4,5,6,7].map((j) => (
+                      {[1, 2, 3, 4, 5, 6, 7].map((j) => (
                         <td key={j}><div className={styles.skeleton} /></td>
                       ))}
                     </tr>
@@ -804,7 +674,7 @@ export default function Customers({ onView }) {
                         <Highlight text={c.company || ''} query={search} />
                         {!c.company && '—'}
                       </td>
-                      <td><StatusCell customer={c} onChange={handleStatusChange} /></td>
+                      <td><StatusCell customer={c} /></td>
                       <td className={styles.amount}>{fmt(c.totalPaid)}</td>
                       <td className={styles.actions}>
                         <button className={styles.viewBtn} onClick={() => onView?.(c._id)}>
@@ -831,6 +701,7 @@ export default function Customers({ onView }) {
           customer={modal === 'add' ? null : modal}
           onClose={() => setModal(null)}
           onSaved={handleSaved}
+          onInvoiceSaved={load}
         />
       )}
     </div>

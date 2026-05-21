@@ -147,7 +147,7 @@
   position: absolute; top: calc(100% + 6px); left: 0;
   background: var(--bg2); border: 1px solid var(--border);
   border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.35);
-  padding: 5px; z-index: 50; min-width: 130px;
+  padding: 5px; z-index: 50; min-width: 160px;
   animation: popIn 0.12s ease;
 }
 @keyframes popIn { from { opacity: 0; transform: scale(0.95) translateY(-4px); } to { opacity: 1; transform: none; } }
@@ -162,6 +162,24 @@
 .dropItem:hover { background: var(--bg3); color: var(--text); }
 .dropItemActive { color: var(--text); }
 .checkmark { margin-left: auto; color: var(--blue); font-size: 11px; }
+
+/* read-only row — current derived status shown at top of dropdown */
+.dropItemReadonly {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 8px 10px; border-radius: 7px;
+  font-size: 12px; font-weight: 500; color: var(--text);
+  font-family: inherit; cursor: default; user-select: none;
+}
+.dropHint {
+  margin-left: auto; font-size: 10px; color: var(--text3);
+  font-weight: 400; letter-spacing: 0.3px;
+}
+
+/* thin divider between read-only row and action rows */
+.dropDivider {
+  height: 1px; background: var(--border);
+  margin: 4px 6px;
+}
 
 /* ── Buttons ──────────────────────────────────────────────────────────────── */
 .btnBlue {
@@ -290,16 +308,38 @@
   content: ''; flex: 1; height: 1px; background: var(--border);
 }
 
-/* ── Full-screen modal ── */
-.fullscreenOverlay {
-  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7);
+/* ── Compact modal overlay ────────────────────────────────────────────────── */
+.modalOverlay {
+  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
   display: flex; align-items: center; justify-content: center;
   z-index: 100; padding: 16px; animation: fadeIn 0.15s ease;
 }
-.fullscreenModal {
+
+.compactModal {
   background: var(--bg2); border: 1px solid var(--border);
-  border-radius: 16px; width: 100%; max-width: 1000px;
-  max-height: 92vh; display: flex; flex-direction: column; overflow: hidden;
+  border-radius: 16px; width: 100%; max-width: 560px;
+  max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.compactHeader {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 22px 24px 18px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.compactTitle { font-size: 17px; font-weight: 700; color: var(--text); }
+.compactSub   { font-size: 12px; color: var(--text3); margin-top: 3px; }
+
+.compactBody {
+  display: flex; flex-direction: column; gap: 16px;
+  padding: 22px 24px; overflow-y: auto; flex: 1;
+}
+
+.compactFooter {
+  display: flex; justify-content: flex-end; gap: 10px;
+  padding-top: 8px; margin-top: 4px;
+  border-top: 1px solid var(--border);
 }
 .fsHeader {
   display: flex; align-items: center; justify-content: space-between;
@@ -573,3 +613,15 @@
 .codeName { flex: 1; font-size: 12px; }
 .codeNum  { font-size: 12px; font-weight: 600; color: var(--text3); }
 .codeCheck { color: var(--blue); font-size: 11px; margin-left: 4px; }
+
+/* ── Fullscreen overlay/modal (edit mode wide layout) ─────────────────────── */
+.fullscreenOverlay {
+  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; padding: 16px; animation: fadeIn 0.15s ease;
+}
+.fullscreenModal {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 16px; width: 100%; max-width: 1000px;
+  max-height: 92vh; display: flex; flex-direction: column; overflow: hidden;
+}

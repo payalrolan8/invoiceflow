@@ -1,29 +1,25 @@
 import express from 'express';
 import Invoice from '../models/Invoice.js';
 import { sendInvoiceReminder } from '../config/email.js';
+import { protect } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
-// Statuses that are unpaid and need reminders
-// 'sent' included — invoices marked sent to the customer are unpaid and must appear in reminders
 const UNPAID_STATUSES = ['sent', 'pending', 'overdue'];
 
-// ── Helper: auto-promote past-due invoices to overdue ────────────────────────
-async function markOverdueInvoices() {
+async function markOverdueInvoices(userId) {
   await Invoice.updateMany(
     {
-      status:  { $in: ['sent', 'pending'] },
-      dueDate: { $lt: new Date() },
+      createdBy: userId,
+      status:    { $in: ['sent', 'pending'] },
+      dueDate:   { $lt: new Date() },
     },
     { $set: { status: 'overdue' } }
   );
 }
 
 // ── POST /api/reminders/webhook ───────────────────────────────────────────────
-// Resend calls this when an email event occurs.
-// IMPORTANT: needs raw body — express.raw() is applied in server.js for this
-// path before express.json(), so req.body arrives here as a raw Buffer.
-// Register in Resend dashboard → Domains → Webhooks → email.opened
+// Public — no protect, Resend calls this directly
 router.post('/webhook', async (req, res) => {
   try {
     const event = JSON.parse(req.body);
@@ -42,13 +38,18 @@ router.post('/webhook', async (req, res) => {
   }
 });
 
+// All routes below this line are protected
+router.use(protect);
+
 // ── GET /api/reminders ────────────────────────────────────────────────────────
-// Returns { queue, stats } — the shape Reminders.jsx expects
 router.get('/', async (req, res, next) => {
   try {
-    await markOverdueInvoices();
+    await markOverdueInvoices(req.user._id);
 
-    const invoices = await Invoice.find({ status: { $in: UNPAID_STATUSES } })
+    const invoices = await Invoice.find({
+      status:    { $in: UNPAID_STATUSES },
+      createdBy: req.user._id,
+    })
       .populate('customer', 'name email company')
       .sort({ dueDate: 1 });
 
@@ -68,13 +69,14 @@ router.get('/', async (req, res, next) => {
 });
 
 // ── POST /api/reminders/send-all ──────────────────────────────────────────────
-// Must be before /:id/send so Express doesn't match "send-all" as an id
 router.post('/send-all', async (req, res, next) => {
   try {
-    await markOverdueInvoices();
+    await markOverdueInvoices(req.user._id);
 
-    const invoices = await Invoice.find({ status: { $in: UNPAID_STATUSES } })
-      .populate('customer', 'name email company');
+    const invoices = await Invoice.find({
+      status:    { $in: UNPAID_STATUSES },
+      createdBy: req.user._id,
+    }).populate('customer', 'name email company');
 
     const results = await Promise.allSettled(
       invoices.map(async (invoice) => {
@@ -100,12 +102,13 @@ router.post('/send-all', async (req, res, next) => {
 });
 
 // ── POST /api/reminders/:id/send ──────────────────────────────────────────────
-// Accepts optional { subject, body } from the compose modal
 router.post('/:id/send', async (req, res, next) => {
   try {
-    const invoice = await Invoice.findById(req.params.id).populate(
-      'customer', 'name email company'
-    );
+    const invoice = await Invoice.findOne({
+      _id:       req.params.id,
+      createdBy: req.user._id,
+    }).populate('customer', 'name email company');
+
     if (!invoice)
       return res.status(404).json({ success: false, error: 'Invoice not found' });
 

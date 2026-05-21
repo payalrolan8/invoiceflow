@@ -2,8 +2,8 @@
 import { useState, useEffect, useRef } from 'react';
 import styles from './CustomerDetail.module.css';
 import InvoiceDrawer from '../components/InvoiceDrawer';
-import { getCustomers } from '../api/customers';
-import { getInvoices } from '../api/invoices';
+import { getCustomers, updateCustomer, deleteCustomer } from '../api/customers';
+import { getInvoices, deleteInvoice } from '../api/invoices';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -45,6 +45,187 @@ const INV_BADGE = {
 
 const FILTERS = ['all', 'draft', 'sent', 'pending', 'paid', 'overdue', 'cancelled'];
 
+// ── Edit Customer Modal ────────────────────────────────────────────────────
+
+function EditCustomerModal({ customer, onClose, onSaved }) {
+  const [form, setForm] = useState({
+    name:    customer.name    || '',
+    email:   customer.email   || '',
+    phone:   customer.phone   || '',
+    company: customer.company || '',
+    address: customer.address || '',
+  });
+  const [saving, setSaving] = useState(false);
+  const [error,  setError]  = useState(null);
+
+  function handleChange(e) {
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!form.name.trim()) { setError('Name is required.'); return; }
+    setSaving(true);
+    setError(null);
+    try {
+      const updated = await updateCustomer(customer._id, form);
+      onSaved(updated);
+      onClose();
+    } catch (err) {
+      setError(err.message || 'Failed to save changes.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function handleBackdrop(e) {
+    if (e.target === e.currentTarget) onClose();
+  }
+
+  return (
+    <div className={styles.modalBackdrop} onClick={handleBackdrop}>
+      <div className={styles.modal}>
+        <div className={styles.modalHeader}>
+          <div className={styles.modalTitle}>Edit Customer</div>
+          <button className={styles.modalClose} onClick={onClose} aria-label="Close">✕</button>
+        </div>
+
+        {error && <div className={styles.modalError}>⚠ {error}</div>}
+
+        <form onSubmit={handleSubmit} className={styles.modalForm}>
+          <div className={styles.fieldRow}>
+            <div className={styles.field}>
+              <label className={styles.fieldLabel}>Name *</label>
+              <input className={styles.fieldInput} name="name" value={form.name}
+                onChange={handleChange} placeholder="Full name" autoFocus />
+            </div>
+            <div className={styles.field}>
+              <label className={styles.fieldLabel}>Company</label>
+              <input className={styles.fieldInput} name="company" value={form.company}
+                onChange={handleChange} placeholder="Company name" />
+            </div>
+          </div>
+
+          <div className={styles.fieldRow}>
+            <div className={styles.field}>
+              <label className={styles.fieldLabel}>Email</label>
+              <input className={styles.fieldInput} name="email" type="email" value={form.email}
+                onChange={handleChange} placeholder="email@example.com" />
+            </div>
+            <div className={styles.field}>
+              <label className={styles.fieldLabel}>Phone</label>
+              <input className={styles.fieldInput} name="phone" value={form.phone}
+                onChange={handleChange} placeholder="+91 98765 43210" />
+            </div>
+          </div>
+
+          <div className={styles.field}>
+            <label className={styles.fieldLabel}>Address</label>
+            <textarea className={`${styles.fieldInput} ${styles.fieldTextarea}`}
+              name="address" value={form.address} onChange={handleChange}
+              placeholder="Street, City, PIN" rows={3} />
+          </div>
+
+          <div className={styles.modalActions}>
+            <button type="button" className={styles.cancelBtn} onClick={onClose} disabled={saving}>
+              Cancel
+            </button>
+            <button type="submit" className={styles.saveBtn} disabled={saving}>
+              {saving ? <><span className={styles.spinnerSm} /> Saving…</> : '✓ Save Changes'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ── Delete Customer Confirm Modal ──────────────────────────────────────────
+
+function DeleteConfirmModal({ customer, invoiceCount, onClose, onConfirm, deleting }) {
+  function handleBackdrop(e) {
+    if (e.target === e.currentTarget && !deleting) onClose();
+  }
+
+  return (
+    <div className={styles.modalBackdrop} onClick={handleBackdrop}>
+      <div className={`${styles.modal} ${styles.deleteModal}`}>
+        <div className={styles.modalHeader}>
+          <div className={styles.modalTitle}>Delete Customer</div>
+          <button className={styles.modalClose} onClick={onClose} disabled={deleting} aria-label="Close">✕</button>
+        </div>
+
+        <div className={styles.deleteBody}>
+          <div className={styles.deleteIcon}>🗑</div>
+          <p className={styles.deleteHeading}>
+            Delete <strong>{customer.name}</strong>?
+          </p>
+          <p className={styles.deleteSubtext}>
+            This will permanently delete the customer
+            {invoiceCount > 0
+              ? <> and their <strong>{invoiceCount} invoice{invoiceCount !== 1 ? 's' : ''}</strong>.</>
+              : '.'
+            }
+            {' '}This action <strong>cannot be undone</strong>.
+          </p>
+        </div>
+
+        <div className={styles.modalActions}>
+          <button className={styles.cancelBtn} onClick={onClose} disabled={deleting}>
+            Cancel
+          </button>
+          <button className={styles.deleteBtnConfirm} onClick={onConfirm} disabled={deleting}>
+            {deleting
+              ? <><span className={styles.spinnerSm} /> Deleting…</>
+              : '🗑 Delete Customer'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Delete Invoice Confirm Modal ───────────────────────────────────────────
+
+function DeleteInvoiceModal({ invoice, onClose, onConfirm, deleting }) {
+  function handleBackdrop(e) {
+    if (e.target === e.currentTarget && !deleting) onClose();
+  }
+
+  return (
+    <div className={styles.modalBackdrop} onClick={handleBackdrop}>
+      <div className={`${styles.modal} ${styles.deleteModal}`}>
+        <div className={styles.modalHeader}>
+          <div className={styles.modalTitle}>Delete Invoice</div>
+          <button className={styles.modalClose} onClick={onClose} disabled={deleting} aria-label="Close">✕</button>
+        </div>
+
+        <div className={styles.deleteBody}>
+          <div className={styles.deleteIcon}>🗑</div>
+          <p className={styles.deleteHeading}>
+            Delete <strong>#{invoice.invoiceNumber}</strong>?
+          </p>
+          <p className={styles.deleteSubtext}>
+            This will permanently delete this invoice.
+            {' '}This action <strong>cannot be undone</strong>.
+          </p>
+        </div>
+
+        <div className={styles.modalActions}>
+          <button className={styles.cancelBtn} onClick={onClose} disabled={deleting}>
+            Cancel
+          </button>
+          <button className={styles.deleteBtnConfirm} onClick={onConfirm} disabled={deleting}>
+            {deleting
+              ? <><span className={styles.spinnerSm} /> Deleting…</>
+              : '🗑 Delete Invoice'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main Page ──────────────────────────────────────────────────────────────
 
 export default function CustomerDetail({ customerId, onBack }) {
@@ -54,11 +235,16 @@ export default function CustomerDetail({ customerId, onBack }) {
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState(null);
 
-  // Drawer state
+  const [editOpen,   setEditOpen]   = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting,   setDeleting]   = useState(false);
+
+  const [deleteInvoiceTarget,  setDeleteInvoiceTarget]  = useState(null);
+  const [deletingInvoice,      setDeletingInvoice]      = useState(false);
+
   const [drawerInvoice, setDrawerInvoice] = useState(null);
   const [drawerMode,    setDrawerMode]    = useState('view');
 
-  // double-click timer
   const clickTimer = useRef(null);
 
   useEffect(() => {
@@ -88,7 +274,42 @@ export default function CustomerDetail({ customerId, onBack }) {
     setDrawerInvoice(updated);
   }
 
-  // Single click → open drawer in view mode
+  function handleCustomerSaved(updated) {
+    setCustomer((prev) => ({ ...prev, ...updated }));
+  }
+
+  async function handleDeleteConfirm() {
+    setDeleting(true);
+    try {
+      await deleteCustomer(customer._id);
+      setDeleteOpen(false);
+      onBack();
+    } catch (err) {
+      setDeleting(false);
+      setDeleteOpen(false);
+      setError(err.message || 'Failed to delete customer.');
+    }
+  }
+
+  async function handleDeleteInvoiceConfirm() {
+    if (!deleteInvoiceTarget) return;
+    setDeletingInvoice(true);
+    try {
+      await deleteInvoice(deleteInvoiceTarget._id);
+      setInvoices((prev) => prev.filter((i) => i._id !== deleteInvoiceTarget._id));
+      if (drawerInvoice?._id === deleteInvoiceTarget._id) {
+        setDrawerInvoice(null);
+        setDrawerMode('view');
+      }
+      setDeleteInvoiceTarget(null);
+    } catch (err) {
+      setError(err.message || 'Failed to delete invoice.');
+      setDeleteInvoiceTarget(null);
+    } finally {
+      setDeletingInvoice(false);
+    }
+  }
+
   function handleRowClick(inv) {
     if (clickTimer.current) return;
     clickTimer.current = setTimeout(() => {
@@ -98,7 +319,6 @@ export default function CustomerDetail({ customerId, onBack }) {
     }, 200);
   }
 
-  // Double click → open drawer in edit mode
   function handleRowDoubleClick(e, inv) {
     e.preventDefault();
     clearTimeout(clickTimer.current);
@@ -135,8 +355,7 @@ export default function CustomerDetail({ customerId, onBack }) {
   const outstanding = invoices.filter((i) => ['pending', 'sent'].includes(i.status)).reduce((s, i) => s + (i.total || 0), 0);
   const overdueCnt  = invoices.filter((i) => i.status === 'overdue').length;
   const lastInvoice = invoices[0] ?? null;
-
-  const filtered = filter === 'all' ? invoices : invoices.filter((i) => i.status === filter);
+  const filtered    = filter === 'all' ? invoices : invoices.filter((i) => i.status === filter);
 
   return (
     <>
@@ -158,10 +377,18 @@ export default function CustomerDetail({ customerId, onBack }) {
                 {[customer.company, customer.email, customer.phone].filter(Boolean).join('  ·  ')}
               </div>
             </div>
-            <span className={styles.statusBadge} style={{ color: statusMeta.color, background: statusMeta.bg }}>
-              <span className={styles.dot} style={{ background: statusMeta.color }} />
-              {statusMeta.label}
-            </span>
+            <div className={styles.heroRight}>
+              <span className={styles.statusBadge} style={{ color: statusMeta.color, background: statusMeta.bg }}>
+                <span className={styles.dot} style={{ background: statusMeta.color }} />
+                {statusMeta.label}
+              </span>
+              <button className={styles.editCustomerBtn} onClick={() => setEditOpen(true)}>
+                ✎ Edit
+              </button>
+              <button className={styles.deleteCustomerBtn} onClick={() => setDeleteOpen(true)}>
+                🗑 Delete
+              </button>
+            </div>
           </div>
 
           {/* Stats */}
@@ -238,7 +465,6 @@ export default function CustomerDetail({ customerId, onBack }) {
             </div>
           ) : (
             <div className={styles.invoiceTable}>
-              {/* Table header */}
               <div className={styles.invoiceTableHead}>
                 <span>Invoice #</span>
                 <span>Issued</span>
@@ -248,7 +474,6 @@ export default function CustomerDetail({ customerId, onBack }) {
                 <span />
               </div>
 
-              {/* Table rows */}
               {filtered.map((inv) => {
                 const badge    = INV_BADGE[inv.status] || INV_BADGE.draft;
                 const isActive = drawerInvoice?._id === inv._id;
@@ -278,6 +503,16 @@ export default function CustomerDetail({ customerId, onBack }) {
                       >
                         👁 View
                       </button>
+                      <button
+                        className={styles.invDeleteBtn}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteInvoiceTarget(inv);
+                        }}
+                        title="Delete invoice"
+                      >
+                        🗑
+                      </button>
                     </div>
                   </div>
                 );
@@ -288,6 +523,36 @@ export default function CustomerDetail({ customerId, onBack }) {
         </div>
       </div>
 
+      {/* Edit Customer Modal */}
+      {editOpen && (
+        <EditCustomerModal
+          customer={customer}
+          onClose={() => setEditOpen(false)}
+          onSaved={handleCustomerSaved}
+        />
+      )}
+
+      {/* Delete Customer Modal */}
+      {deleteOpen && (
+        <DeleteConfirmModal
+          customer={customer}
+          invoiceCount={invoices.length}
+          onClose={() => setDeleteOpen(false)}
+          onConfirm={handleDeleteConfirm}
+          deleting={deleting}
+        />
+      )}
+
+      {/* Delete Invoice Modal */}
+      {deleteInvoiceTarget && (
+        <DeleteInvoiceModal
+          invoice={deleteInvoiceTarget}
+          onClose={() => setDeleteInvoiceTarget(null)}
+          onConfirm={handleDeleteInvoiceConfirm}
+          deleting={deletingInvoice}
+        />
+      )}
+
       {/* Invoice Drawer */}
       {drawerInvoice && (
         <InvoiceDrawer
@@ -295,6 +560,7 @@ export default function CustomerDetail({ customerId, onBack }) {
           initialMode={drawerMode}
           onClose={closeDrawer}
           onSaved={handleInvoiceUpdated}
+          onDelete={(inv) => setDeleteInvoiceTarget(inv)}
         />
       )}
     </>

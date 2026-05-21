@@ -2,19 +2,45 @@
 import { useState } from 'react';
 import './styles/global.css';
 
-import Sidebar        from './components/Sidebar';
-import Topbar         from './components/Topbar';
-import Dashboard      from './pages/Dashboard';
-import Customers      from './pages/Customers';
-import Invoices       from './pages/Invoices';
-import CustomerDetail from './pages/CustomerDetail';
-import Reminders      from './pages/Reminders';
+import { useAuth }      from './context/AuthContext';
+import Sidebar          from './components/Sidebar';
+import Topbar           from './components/Topbar';
+import Dashboard        from './pages/Dashboard';
+import Customers        from './pages/Customers';
+import Invoices         from './pages/Invoices';
+import CustomerDetail   from './pages/CustomerDetail';
+import Reminders        from './pages/Reminders';
+import LoginPage        from './pages/LoginPage';
+import RegisterPage     from './pages/RegisterPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 
 export default function App() {
-  const [page,           setPage]           = useState('dashboard');
+  const { user, loading, logout } = useAuth();
+
+  const [page,           setPage]           = useState('login');
   const [sidebarOpen,    setSidebarOpen]    = useState(false);
   const [detailCustomer, setDetailCustomer] = useState(null);
 
+  // While checking token / fetching user
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        minHeight: '100vh', background: '#0f1117', color: '#fff', fontSize: 16,
+      }}>
+        Loading…
+      </div>
+    );
+  }
+
+  // ── Auth pages ────────────────────────────────────────────────────────────
+  if (!user) {
+    if (page === 'register')        return <RegisterPage     onNavigate={setPage} />;
+    if (page === 'forgot-password') return <ForgotPasswordPage onNavigate={setPage} />;
+    return <LoginPage onNavigate={setPage} />;
+  }
+
+  // ── App pages ─────────────────────────────────────────────────────────────
   function handleNav(id) {
     setPage(id);
     setDetailCustomer(null);
@@ -49,7 +75,10 @@ export default function App() {
       <Sidebar activePage={page} onNav={handleNav} open={sidebarOpen} />
 
       <div className="main-content">
-        <Topbar onMenuClick={() => setSidebarOpen((v) => !v)} />
+        <Topbar
+          onMenuClick={() => setSidebarOpen((v) => !v)}
+          onLogout={() => { logout(); setPage('login'); }}
+        />
         <main style={{ padding: 24, flex: 1 }}>{renderPage()}</main>
       </div>
 

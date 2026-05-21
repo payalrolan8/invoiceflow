@@ -103,7 +103,7 @@
   transition: all 0.15s;
 }
 
-/* ── Sort dropdown — matches Customers page ───────────────────────────────── */
+/* ── Sort dropdown ───────────────────────────────────────────────────────── */
 .sortSelect {
   padding: 7px 10px;
   background: var(--bg3);
@@ -118,7 +118,7 @@
 }
 .sortSelect:focus { border-color: var(--blue); }
 
-/* Table */
+/* ── Table ───────────────────────────────────────────────────────────────── */
 .tableWrap { overflow-x: auto; }
 .table { width: 100%; border-collapse: collapse; }
 .table thead th {
@@ -129,13 +129,20 @@
 .table tbody tr { border-bottom: 1px solid var(--border); }
 .table tbody tr:last-child { border-bottom: none; }
 .table tbody tr:hover { background: var(--bg3); }
-.table td { padding: 10px 16px; font-size: 13px; color: var(--text); }
+/* ── KEY CHANGE: more vertical padding + middle-align everything ── */
+.table td {
+  padding: 11px 16px;
+  font-size: 13px;
+  color: var(--text);
+  vertical-align: middle;
+  line-height: 1.4;
+}
 
-.idCell { font-family: 'Space Mono', monospace; font-size: 12px; color: var(--text2); }
+.idCell { font-family: 'Space Mono', monospace; font-size: 12px; color: var(--text2); white-space: nowrap; }
 .name   { font-weight: 500; }
 .muted  { color: var(--text2); font-size: 12px; }
-.amount { font-family: 'Space Mono', monospace; font-weight: 700; }
-.empty  { text-align: center; color: var(--text3); padding: 32px 0 !important; }
+.amount { font-family: 'Space Mono', monospace; font-weight: 700; white-space: nowrap; }
+.empty  { text-align: center; color: var(--text3); padding: 40px 0 !important; }
 
 /* Search highlight */
 .mark {
@@ -153,10 +160,16 @@
 .statusSelect:focus { border-color: var(--blue); }
 
 /* ── Actions cell ─────────────────────────────────────────────────────────── */
-.actions { display: flex; gap: 6px; align-items: center; }
+.actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
 
 .viewBtn {
-  padding: 5px 10px; font-size: 12px; font-family: inherit;
+  padding: 6px 12px; font-size: 12px; font-family: inherit;
   background: transparent; border: 1px solid var(--border);
   border-radius: 6px; color: var(--text2); cursor: pointer;
   transition: all 0.15s; white-space: nowrap;
@@ -388,3 +401,185 @@
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes spin    { to { transform: rotate(360deg); } }
+
+/* ── CustomerPicker: create new customer ──────────────────────────────────── */
+.pickerNewBtn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 9px 12px;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--border);
+  color: var(--blue);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+}
+.pickerNewBtn:hover { background: rgba(59, 130, 246, 0.07); }
+
+.pickerNewIcon { font-size: 15px; line-height: 1; }
+
+.newCustHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+.newCustBack {
+  background: none;
+  border: none;
+  color: var(--text3);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 5px;
+  transition: color 0.12s, background 0.12s;
+}
+.newCustBack:hover { color: var(--text); background: var(--bg3); }
+
+.newCustError {
+  margin: 8px 10px 0;
+  padding: 7px 10px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.newCustForm {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 10px;
+}
+
+.newCustInput {
+  padding: 8px 10px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.newCustInput:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.14);
+}
+.newCustInput::placeholder { color: var(--text3); }
+
+.newCustSubmit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 14px;
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  margin-top: 2px;
+}
+.newCustSubmit:hover:not(:disabled) { background: var(--blue2); }
+.newCustSubmit:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.newCustSpinner {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.55s linear infinite;
+}
+
+/* ── Delete button ────────────────────────────────────────────────────────── */
+.deleteBtn {
+  padding: 6px 12px; font-size: 12px; font-family: inherit;
+  background: transparent; border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text2); cursor: pointer;
+  transition: all 0.15s; white-space: nowrap;
+}
+.deleteBtn:hover {
+  border-color: #ef4444; color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+/* ── Delete confirm modal ─────────────────────────────────────────────────── */
+.modalBackdrop {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.deleteModal {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 14px; width: 100%; max-width: 420px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.5); overflow: hidden;
+}
+.deleteModalHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 22px 16px; border-bottom: 1px solid var(--border);
+}
+.deleteModalTitle { font-size: 15px; font-weight: 700; color: var(--text); }
+.deleteModalClose {
+  background: none; border: none; color: var(--text3);
+  font-size: 16px; cursor: pointer; padding: 4px 8px; border-radius: 6px;
+}
+.deleteModalClose:hover:not(:disabled) { color: var(--text); background: var(--bg3); }
+.deleteModalBody {
+  padding: 28px 24px 8px;
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px;
+}
+.deleteIcon {
+  font-size: 36px; background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.2); border-radius: 50%;
+  width: 64px; height: 64px; display: flex; align-items: center; justify-content: center;
+}
+.deleteHeading { font-size: 16px; color: var(--text); margin: 0; }
+.deleteSubtext { font-size: 13px; color: var(--text2); margin: 0; line-height: 1.6; }
+.deleteModalActions {
+  display: flex; gap: 10px; justify-content: flex-end; padding: 16px 22px 20px;
+}
+.cancelBtn {
+  padding: 9px 18px; font-size: 13px; font-family: inherit;
+  background: transparent; border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text2); cursor: pointer; font-weight: 500;
+}
+.cancelBtn:hover:not(:disabled) { border-color: var(--border2); color: var(--text); }
+.cancelBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+.deleteBtnConfirm {
+  padding: 9px 20px; font-size: 13px; font-family: inherit;
+  background: #ef4444; border: 1px solid #ef4444;
+  border-radius: 8px; color: #fff; cursor: pointer; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.deleteBtnConfirm:hover:not(:disabled) { background: #dc2626; border-color: #dc2626; }
+.deleteBtnConfirm:disabled { opacity: 0.6; cursor: not-allowed; }
+.spinnerSm {
+  width: 12px; height: 12px;
+  border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+  border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block;
+}

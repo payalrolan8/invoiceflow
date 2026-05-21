@@ -2,14 +2,16 @@ import express from 'express';
 import Invoice from '../models/Invoice.js';
 import Customer from '../models/Customer.js';
 import { sendInvoiceReminder } from '../config/email.js';
+import { protect } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
+router.use(protect);
 
-// GET /api/invoices — list all (filter by status, search by number/customer)
+// ── GET /api/invoices ─────────────────────────────────────────────────────────
 router.get('/', async (req, res, next) => {
   try {
     const { status, search } = req.query;
-    const query = {};
+    const query = { createdBy: req.user._id };
 
     if (status && status !== 'all') query.status = status;
 
@@ -33,10 +35,11 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-// GET /api/invoices/stats — MUST be before /:id
+// ── GET /api/invoices/stats — MUST be before /:id ─────────────────────────────
 router.get('/stats', async (req, res, next) => {
   try {
     const [invoiceStats] = await Invoice.aggregate([
+      { $match: { createdBy: req.user._id } },
       {
         $group: {
           _id: null,
@@ -62,10 +65,13 @@ router.get('/stats', async (req, res, next) => {
   }
 });
 
-// GET /api/invoices/:id
+// ── GET /api/invoices/:id ─────────────────────────────────────────────────────
 router.get('/:id', async (req, res, next) => {
   try {
-    const invoice = await Invoice.findById(req.params.id).populate('customer');
+    const invoice = await Invoice.findOne({
+      _id:       req.params.id,
+      createdBy: req.user._id,
+    }).populate('customer');
     if (!invoice) return res.status(404).json({ success: false, error: 'Invoice not found' });
     res.json({ success: true, data: invoice });
   } catch (err) {
@@ -73,12 +79,12 @@ router.get('/:id', async (req, res, next) => {
   }
 });
 
-// POST /api/invoices
+// ── POST /api/invoices ────────────────────────────────────────────────────────
 router.post('/', async (req, res, next) => {
   try {
     const { customer: customerId, lineItems = [], ...rest } = req.body;
 
-    const customer = await Customer.findById(customerId);
+    const customer = await Customer.findOne({ _id: customerId, createdBy: req.user._id });
     if (!customer) return res.status(404).json({ success: false, error: 'Customer not found' });
 
     const processedItems = lineItems.map((item) => ({
@@ -87,12 +93,16 @@ router.post('/', async (req, res, next) => {
     }));
 
     const invoice = await Invoice.create({
-      customer: customerId,
+      customer:  customerId,
+      createdBy: req.user._id,
       lineItems: processedItems,
       ...rest,
     });
 
-    await Customer.findByIdAndUpdate(customerId, { $inc: { totalInvoices: 1 } });
+    await Customer.findOneAndUpdate(
+      { _id: customerId, createdBy: req.user._id },
+      { $inc: { totalInvoices: 1 } }
+    );
 
     const populated = await invoice.populate('customer', 'name email company');
     res.status(201).json({ success: true, data: populated });
@@ -101,7 +111,7 @@ router.post('/', async (req, res, next) => {
   }
 });
 
-// PUT /api/invoices/:id
+// ── PUT /api/invoices/:id ─────────────────────────────────────────────────────
 router.put('/:id', async (req, res, next) => {
   try {
     const { lineItems, ...rest } = req.body;
@@ -114,25 +124,25 @@ router.put('/:id', async (req, res, next) => {
       }));
     }
 
-    const invoice = await Invoice.findById(req.params.id);
+    const invoice = await Invoice.findOne({ _id: req.params.id, createdBy: req.user._id });
     if (!invoice) return res.status(404).json({ success: false, error: 'Invoice not found' });
 
-    // ── FIX: capture old status BEFORE Object.assign overwrites it ────────────
     const wasPaid = invoice.status === 'paid';
 
     Object.assign(invoice, update);
     await invoice.save();
 
-    // Sync customer totalPaid when status transitions to/from paid
     const nowPaid = invoice.status === 'paid';
     if (!wasPaid && nowPaid) {
-      await Customer.findByIdAndUpdate(invoice.customer, {
-        $inc: { totalPaid: invoice.total },
-      });
+      await Customer.findOneAndUpdate(
+        { _id: invoice.customer, createdBy: req.user._id },
+        { $inc: { totalPaid: invoice.total } }
+      );
     } else if (wasPaid && !nowPaid) {
-      await Customer.findByIdAndUpdate(invoice.customer, {
-        $inc: { totalPaid: -invoice.total },
-      });
+      await Customer.findOneAndUpdate(
+        { _id: invoice.customer, createdBy: req.user._id },
+        { $inc: { totalPaid: -invoice.total } }
+      );
     }
 
     const populated = await invoice.populate('customer', 'name email company');
@@ -142,7 +152,7 @@ router.put('/:id', async (req, res, next) => {
   }
 });
 
-// PATCH /api/invoices/:id/status
+// ── PATCH /api/invoices/:id/status ────────────────────────────────────────────
 router.patch('/:id/status', async (req, res, next) => {
   try {
     const { status } = req.body;
@@ -151,7 +161,10 @@ router.patch('/:id/status', async (req, res, next) => {
       return res.status(400).json({ success: false, error: 'Invalid status value' });
     }
 
-    const invoice = await Invoice.findById(req.params.id).populate('customer', 'name email');
+    const invoice = await Invoice.findOne({
+      _id:       req.params.id,
+      createdBy: req.user._id,
+    }).populate('customer', 'name email');
     if (!invoice) return res.status(404).json({ success: false, error: 'Invoice not found' });
 
     const wasPaid = invoice.status === 'paid';
@@ -160,15 +173,16 @@ router.patch('/:id/status', async (req, res, next) => {
     invoice.status = status;
     await invoice.save();
 
-    // Keep customer totalPaid in sync
     if (!wasPaid && nowPaid) {
-      await Customer.findByIdAndUpdate(invoice.customer._id, {
-        $inc: { totalPaid: invoice.total },
-      });
+      await Customer.findOneAndUpdate(
+        { _id: invoice.customer._id, createdBy: req.user._id },
+        { $inc: { totalPaid: invoice.total } }
+      );
     } else if (wasPaid && !nowPaid) {
-      await Customer.findByIdAndUpdate(invoice.customer._id, {
-        $inc: { totalPaid: -invoice.total },
-      });
+      await Customer.findOneAndUpdate(
+        { _id: invoice.customer._id, createdBy: req.user._id },
+        { $inc: { totalPaid: -invoice.total } }
+      );
     }
 
     res.json({ success: true, data: invoice });
@@ -177,17 +191,19 @@ router.patch('/:id/status', async (req, res, next) => {
   }
 });
 
-// POST /api/invoices/:id/remind
+// ── POST /api/invoices/:id/remind ─────────────────────────────────────────────
 router.post('/:id/remind', async (req, res, next) => {
   try {
-    const invoice = await Invoice.findById(req.params.id).populate('customer');
+    const invoice = await Invoice.findOne({
+      _id:       req.params.id,
+      createdBy: req.user._id,
+    }).populate('customer');
     if (!invoice) return res.status(404).json({ success: false, error: 'Invoice not found' });
 
     if (invoice.status === 'paid') {
       return res.status(400).json({ success: false, error: 'Invoice is already paid — no reminder needed' });
     }
 
-    // ── FIX: store resendEmailId so the webhook can match open events ─────────
     const resendEmailId = await sendInvoiceReminder(invoice);
     invoice.reminderSentAt = new Date();
     invoice.resendEmailId  = resendEmailId;
@@ -199,13 +215,16 @@ router.post('/:id/remind', async (req, res, next) => {
   }
 });
 
-// DELETE /api/invoices/:id
+// ── DELETE /api/invoices/:id ──────────────────────────────────────────────────
 router.delete('/:id', async (req, res, next) => {
   try {
-    const invoice = await Invoice.findById(req.params.id);
+    const invoice = await Invoice.findOne({ _id: req.params.id, createdBy: req.user._id });
     if (!invoice) return res.status(404).json({ success: false, error: 'Invoice not found' });
 
-    await Customer.findByIdAndUpdate(invoice.customer, { $inc: { totalInvoices: -1 } });
+    await Customer.findOneAndUpdate(
+      { _id: invoice.customer, createdBy: req.user._id },
+      { $inc: { totalInvoices: -1 } }
+    );
     await invoice.deleteOne();
 
     res.json({ success: true, message: 'Invoice deleted' });
